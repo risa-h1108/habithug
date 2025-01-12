@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id         String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name       String
+  supabaseId String  @unique
+  diaries    Diary[]
+  habit      Habit?
+  inquiries  Inquiry[]
+}
+
+model Habit {
+  id                       String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                     String
+  supplementaryDescription String
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  userId                   String?  @unique @db.Uuid
+  user                     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Inquiry {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+  userId    String?  @db.Uuid
+  user      User?   @relation(fields: [userId], references: [id])
+}
+
+model Diary {
+  id              String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  date            DateTime
+  additionalNotes String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  reflection      Reflection
+  userId          String     @db.Uuid
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  praises          Praise[]
+}
+
+model Praise {
+  id         String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  praiseText String
+  diaryId    String @db.Uuid
+  diary      Diary  @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+}
+
+enum Reflection {
+  VERY_GOOD
+  GOOD
+  MORE
+}
