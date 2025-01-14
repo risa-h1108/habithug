@@ -3,6 +3,7 @@
 import { supabase } from "@/untils/supabase";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button, Input, Label } from "../_components/Input";
 
 export default function Page() {
   const [email, setEmail] = useState("");
@@ -32,47 +33,30 @@ export default function Page() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label
-              htmlFor="email"
-              className="block mb-2 text-sm font-medium text-gray-900"
-            >
-              メールアドレス
-            </label>
-            <input
+            <Label htmlFor="email">メールアドレス</Label>
+            <Input
               type="email"
               name="email"
               id="email"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-300 focus:border-green-300 block w-full p-2.5"
               placeholder="name@company.com"
               required
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="block mb-2 text-sm font-medium text-gray-900"
-            >
-              パスワード
-            </label>
-            <input
+            <Label htmlFor="password">パスワード</Label>
+            <Input
               type="password"
               name="password"
               id="password"
               placeholder="••••••••"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-300 focus:border-green-300 block w-full p-2.5"
               required
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
           <div>
-            <button
-              type="submit"
-              className="w-full text-white bg-green-300 hover:bg-green-500 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-            >
-              ログイン
-            </button>
+            <Button type="submit">ログイン</Button>
           </div>
         </form>
       </div>

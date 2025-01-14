@@ -11,7 +11,7 @@ export const POST = async (request: Request) => {
     const { supabaseId } = body;
 
     // Prismaでローカルデータベースに保存
-    const userData = await prisma.user.create({
+    await prisma.user.create({
       data: {
         supabaseId,
       },
@@ -20,7 +20,6 @@ export const POST = async (request: Request) => {
     return NextResponse.json({
       status: "OK",
       message: "ユーザーが作成されました",
-      user: userData,
     });
   } catch (error) {
     console.error(error);
