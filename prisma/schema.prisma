@@ -10,6 +10,7 @@ datasource db {
 
 model User {
   id         String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name       String
   supabaseId String  @unique
   diaries    Diary[]
   habit      Habit?
