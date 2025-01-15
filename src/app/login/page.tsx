@@ -3,7 +3,9 @@
 import { supabase } from "@/untils/supabase";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Input, Label } from "../_components/Input";
+import { Input } from "../_components/Input";
+import { Label } from "../_components/Label";
+import { Button } from "../_components/Button";
 
 export default function Page() {
   const [email, setEmail] = useState("");
