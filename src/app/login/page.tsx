@@ -35,7 +35,7 @@ export default function Page() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="email">メールアドレス</Label>
+            <Label htmlFor="email">email</Label>
             <Input
               type="email"
               name="email"
@@ -46,7 +46,7 @@ export default function Page() {
             />
           </div>
           <div>
-            <Label htmlFor="password">パスワード</Label>
+            <Label htmlFor="password">password</Label>
             <Input
               type="password"
               name="password"
