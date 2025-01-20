@@ -51,7 +51,7 @@ export default function Page() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "サーバーエラーが発生しました。");
+        throw new Error(errorData.message);
       }
 
       setName("");

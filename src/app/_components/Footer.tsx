@@ -25,7 +25,7 @@ export const Footer: React.FC = () => {
           </Link>
         </div>
         <div className="flex flex-col items-center space-y-2">
-          <Link href="/dashboard/records/{recordId}">
+          <Link href="/dashboard/confirm">
             <div className="flex flex-col items-center space-y-1">
               <FontAwesomeIcon icon={faClockRotateLeft} className="text-3xl" />
               <span className="text-lg">履歴</span>
