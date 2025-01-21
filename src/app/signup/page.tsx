@@ -6,10 +6,16 @@ import { CreateUserRequestBody } from "../_types/User/PostRequest";
 import { Input } from "../_components/Input";
 import { Label } from "../_components/Label";
 import { Button } from "../_components/Button";
+import { useForm } from "react-hook-form";
 
 export default function Page() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // useFormを使用してフォームの状態を管理
+  const {
+    formState: { isSubmitting },
+  } = useForm();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,6 +66,7 @@ export default function Page() {
               required
               onChange={(e) => setEmail(e.target.value)}
               value={email}
+              disabled={isSubmitting}
             />
           </div>
           <div>
@@ -72,11 +79,12 @@ export default function Page() {
               required
               onChange={(e) => setPassword(e.target.value)}
               value={password}
+              disabled={isSubmitting}
             />
           </div>
 
           <div>
-            <Button color="green" type="submit">
+            <Button color="green" type="submit" disabled={isSubmitting}>
               新規登録
             </Button>
           </div>
