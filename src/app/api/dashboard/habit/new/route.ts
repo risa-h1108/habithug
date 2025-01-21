@@ -6,41 +6,23 @@ import { supabase } from "@/untils/supabase";
 const prisma = new PrismaClient();
 
 export const POST = async (request: NextRequest) => {
-  let token = request.headers.get("Authorization") ?? "";
+  const token = request.headers.get("Authorization") ?? "";
   console.log(token);
 
   // Supabaseに対してtokenを送る
-  let { data, error } = await supabase.auth.getUser(token);
+  const { data, error } = await supabase.auth.getUser(token);
   console.log(data);
   console.log(error);
 
-  // トークンが無効または期限切れの場合、トークンをリフレッシュ
-  if (error?.status === 403) {
-    const refreshResponse = await supabase.auth.refreshSession();
-
-    if (refreshResponse.error) {
-      console.error("Error refreshing token:", refreshResponse.error.message);
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "認証トークンが無効です。再ログインしてください。",
-        },
-        { status: 403 }
-      );
-    }
-
-    // 新しいトークンを取得して再度ユーザー情報を取得
-    token = refreshResponse.data.session?.access_token ?? "";
-    ({ data, error } = await supabase.auth.getUser(token));
-    if (error) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: error.message,
-        },
-        { status: 403 }
-      );
-    }
+  // トークンが無効または期限切れの場合、エラーを吐くように変更
+  if (error) {
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "認証トークンが無効です。再ログインしてください。",
+      },
+      { status: 403 }
+    );
   }
 
   const userId = data.user?.id;
@@ -75,6 +57,22 @@ export const POST = async (request: NextRequest) => {
     console.log(body);
 
     const { supplementaryDescription, name } = body;
+
+    //usrIdが一致する習慣が存在しているか探す
+    const userIdMathingHabit = await prisma.habit.findMany({
+      where: { id: userId },
+    });
+
+    //usrIdが一致する習慣が存在していたら（0よりも登録数があれば＝1つ以上登録されていれば）エラーをフロントに返す
+    if (userIdMathingHabit.length > 0) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "1ユーザーにつき1つ習慣のみ登録可能です。",
+        },
+        { status: 409 }
+      );
+    }
 
     // 1ユーザーにつき、1習慣のため、postmanなどの作業中に重複できないので気をつける
     await prisma.habit.create({

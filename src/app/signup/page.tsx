@@ -76,7 +76,9 @@ export default function Page() {
           </div>
 
           <div>
-            <Button type="submit">新規登録</Button>
+            <Button color="green" type="submit">
+              新規登録
+            </Button>
           </div>
         </form>
       </div>

@@ -58,7 +58,9 @@ export default function Page() {
           </div>
 
           <div>
-            <Button type="submit">ログイン</Button>
+            <Button color="green" type="submit">
+              ログイン
+            </Button>
           </div>
         </form>
       </div>

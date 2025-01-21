@@ -5,14 +5,22 @@ import { useState, useEffect } from "react";
 import { CreateHabitRequestBody } from "@/app/_types/Habit/PostRequest";
 import { Label } from "@/app/_components/Label";
 import { Input } from "@/app/_components/Input";
-import { BlueButton } from "@/app/_components/BlueButton";
+import { Button } from "@/app/_components/Button";
 import { Footer } from "@/app/_components/Footer";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 
 export default function Page() {
   const [name, setName] = useState("");
   const [supplementaryDescription, setSupplementaryDescription] = useState("");
   const { token } = useSupabaseSession();
+  const router = useRouter();
+
+  // useFormを使用してフォームの状態を管理
+  const {
+    formState: { isSubmitting },
+  } = useForm();
 
   useEffect(() => {
     // Supabaseから現在のユーザー情報を取得
@@ -29,6 +37,10 @@ export default function Page() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const handleLogout = () => {
+      router.replace("/login");
+    };
 
     if (!token) {
       alert("ユーザーが認証されていません。");
@@ -51,12 +63,20 @@ export default function Page() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message);
-      }
 
-      setName("");
-      setSupplementaryDescription("");
-      alert("習慣を登録しました。");
+        // トークンが無効な場合の処理
+        if (response.status === 403) {
+          alert(errorData.message); // ユーザーにエラーメッセージを表示
+          // ここでログアウト処理を行う
+          handleLogout();
+        } else {
+          throw new Error(errorData.message);
+        }
+      } else {
+        setName("");
+        setSupplementaryDescription("");
+        alert("習慣を登録しました。");
+      }
     } catch (error) {
       console.error("Error submitting form", error);
       alert("エラーが発生しました。もう一度お試しください。");
@@ -78,6 +98,7 @@ export default function Page() {
               required
               onChange={(e) => setName(e.target.value)}
               value={name}
+              disabled={isSubmitting} //送信中には入力やボタンを無効化する
             />
           </div>
           <div>
@@ -88,9 +109,12 @@ export default function Page() {
               className="w-full p-2 border border-gray-300 rounded"
               onChange={(e) => setSupplementaryDescription(e.target.value)}
               value={supplementaryDescription}
+              disabled={isSubmitting} //送信中には入力やボタンを無効化する
             />
           </div>
-          <BlueButton type="submit">決定</BlueButton>
+          <Button color="blue" type="submit" disabled={isSubmitting}>
+            決定
+          </Button>
         </form>
         <Footer />
       </div>
