@@ -25,11 +25,10 @@ export const POST = async (request: NextRequest) => {
     );
   }
 
-  const userId = data.user?.id;
   const supabaseId = data.user?.id; // SupabaseのユーザーIDを取得
-  console.log(userId);
+  console.log(supabaseId);
 
-  if (!userId || !supabaseId) {
+  if (!supabaseId) {
     return NextResponse.json(
       {
         status: "error",
@@ -40,13 +39,12 @@ export const POST = async (request: NextRequest) => {
   }
 
   const existingUser = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { supabaseId: supabaseId }, // Supabase IDで検索
   });
 
   if (!existingUser) {
     await prisma.user.create({
       data: {
-        id: userId,
         supabaseId: supabaseId, // SupabaseのユーザーIDを渡す
       },
     });
@@ -58,13 +56,13 @@ export const POST = async (request: NextRequest) => {
 
     const { supplementaryDescription, name } = body;
 
-    //usrIdが一致する習慣が存在しているか探す
-    const userIdMathingHabit = await prisma.habit.findMany({
-      where: { id: userId },
+    // SupabaseIDが一致する習慣が存在しているか探す
+    const supabaseIdMathingHabit = await prisma.habit.findMany({
+      where: { userId: existingUser?.id }, // ユーザーIDで検索
     });
 
     //usrIdが一致する習慣が存在していたら（0よりも登録数があれば＝1つ以上登録されていれば）エラーをフロントに返す
-    if (userIdMathingHabit.length > 0) {
+    if (supabaseIdMathingHabit.length > 0) {
       return NextResponse.json(
         {
           status: "error",
@@ -79,7 +77,7 @@ export const POST = async (request: NextRequest) => {
       data: {
         supplementaryDescription,
         name,
-        userId,
+        userId: existingUser?.id,
       },
     });
 
