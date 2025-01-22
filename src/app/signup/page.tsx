@@ -84,7 +84,12 @@ export default function Page() {
           </div>
 
           <div>
-            <Button color="green" type="submit" disabled={isSubmitting}>
+            <Button
+              color="green"
+              size="long"
+              type="submit"
+              disabled={isSubmitting}
+            >
               新規登録
             </Button>
           </div>

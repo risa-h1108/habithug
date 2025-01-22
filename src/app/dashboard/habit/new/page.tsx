@@ -112,7 +112,12 @@ export default function Page() {
               disabled={isSubmitting} //送信中には入力やボタンを無効化する
             />
           </div>
-          <Button color="blue" type="submit" disabled={isSubmitting}>
+          <Button
+            color="blue"
+            size="small"
+            type="submit"
+            disabled={isSubmitting}
+          >
             決定
           </Button>
         </form>
