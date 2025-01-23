@@ -8,19 +8,12 @@ import { Input } from "@/app/_components/Input";
 import { Button } from "@/app/_components/Button";
 import { Footer } from "@/app/_components/Footer";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 export default function Page() {
   const [name, setName] = useState("");
   const [supplementaryDescription, setSupplementaryDescription] = useState("");
   const { token } = useSupabaseSession();
-  const router = useRouter();
-
-  // useFormを使用してフォームの状態を管理
-  const {
-    formState: { isSubmitting },
-  } = useForm();
 
   useEffect(() => {
     // Supabaseから現在のユーザー情報を取得
@@ -35,12 +28,13 @@ export default function Page() {
     getUserInfo();
   }, []);
 
+  // useFormを使用してフォームの状態を管理
+  const {
+    formState: { isSubmitting },
+  } = useForm();
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    const handleLogout = () => {
-      router.replace("/login");
-    };
 
     if (!token) {
       alert("ユーザーが認証されていません。");
@@ -63,20 +57,12 @@ export default function Page() {
 
       if (!response.ok) {
         const errorData = await response.json();
-
-        // トークンが無効な場合の処理
-        if (response.status === 403) {
-          alert(errorData.message); // ユーザーにエラーメッセージを表示
-          // ここでログアウト処理を行う
-          handleLogout();
-        } else {
-          throw new Error(errorData.message);
-        }
-      } else {
-        setName("");
-        setSupplementaryDescription("");
-        alert("習慣を登録しました。");
+        throw new Error(errorData.message || "サーバーエラーが発生しました。");
       }
+
+      setName("");
+      setSupplementaryDescription("");
+      alert("習慣を登録しました。");
     } catch (error) {
       console.error("Error submitting form", error);
       alert("エラーが発生しました。もう一度お試しください。");

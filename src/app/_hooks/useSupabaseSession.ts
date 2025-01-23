@@ -10,13 +10,20 @@ export const useSupabaseSession = () => {
 
   useEffect(() => {
     const fetcher = async () => {
-      const {
-        data: { session },
-        //supabase.auth.getSession():現在ログイン中かどうかのチェックができます
-      } = await supabase.auth.getSession();
-      setSession(session);
-      setToken(session?.access_token || null);
-      setIsLoading(false);
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error fetching session:", error.message);
+        } else {
+          console.log("Session data:", data.session);
+          setSession(data.session);
+          setToken(data.session?.access_token || null);
+        }
+      } catch (error) {
+        console.error("Unexpected error:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetcher();
