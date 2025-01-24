@@ -2,24 +2,29 @@
 
 import { supabase } from "@/untils/supabase";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { Input } from "../_components/Input";
 import { Label } from "../_components/Label";
 import { Button } from "../_components/Button";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
+
+// フォームの入力フィールドの型を定義
+type FormValues = {
+  email: string;
+  password: string;
+};
 
 export default function Page() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const router = useRouter();
 
   // useFormを使用してフォームの状態を管理
   const {
+    register,
+    handleSubmit,
     formState: { isSubmitting },
-  } = useForm();
+  } = useForm<FormValues>();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    const { email, password } = data;
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -39,16 +44,15 @@ export default function Page() {
         <div className="block mb-6 text-3xl font-medium text-gray-900 text-center">
           ログイン
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Label htmlFor="email">email</Label>
             <Input
               type="email"
-              name="email"
+              {...register("email", { required: true })}
               id="email"
               placeholder="name@company.com"
               required
-              onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
             />
           </div>
@@ -56,11 +60,10 @@ export default function Page() {
             <Label htmlFor="password">password</Label>
             <Input
               type="password"
-              name="password"
+              {...register("password", { required: true })}
               id="password"
               placeholder="••••••••"
               required
-              onChange={(e) => setPassword(e.target.value)}
               disabled={isSubmitting}
             />
           </div>

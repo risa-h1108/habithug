@@ -43,11 +43,13 @@ export const POST = async (request: NextRequest) => {
   });
 
   if (!existingUser) {
-    await prisma.user.create({
-      data: {
-        supabaseId: supabaseId, // SupabaseのユーザーIDを渡す
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "指定されたユーザーが存在しません。",
       },
-    });
+      { status: 403 }
+    );
   }
 
   try {
@@ -58,7 +60,7 @@ export const POST = async (request: NextRequest) => {
 
     // SupabaseIDが一致する習慣が存在しているか探す
     const supabaseIdMathingHabit = await prisma.habit.findMany({
-      where: { userId: existingUser?.id }, // ユーザーIDで検索
+      where: { userId: existingUser.id }, // ユーザーIDで検索
     });
 
     //usrIdが一致する習慣が存在していたら（0よりも登録数があれば＝1つ以上登録されていれば）エラーをフロントに返す
