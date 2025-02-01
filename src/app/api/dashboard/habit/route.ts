@@ -8,26 +8,38 @@ const prisma = new PrismaClient();
 
 export const GET = async (request: NextRequest) => {
   const token = request.headers.get("Authorization") ?? "";
+  console.log("Token:", token);
 
-  // supabaseに対してtokenを送る
-  const { data, error } = await supabase.auth.getUser(token);
-
-  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
-  if (error) {
-    console.error("Supabase error:", error.message);
+  if (!token) {
     return NextResponse.json(
       {
         status: "error",
-        message: "認証トークンが無効です。再ログインしてください。",
+        message: "トークンが提供されていません。",
       },
-      { status: 403 }
+      { status: 401 }
     );
   }
 
-  // tokenが正しい場合、以降が実行される
   try {
-    // ユーザーIDを使用して習慣をDBから取得
-    const userId = data.user?.id;
+    // supabaseに対してtokenを送る
+    const { data, error } = await supabase.auth.getUser(token);
+    console.log("Supabase Data:", data);
+    console.log("Supabase Error:", error);
+
+    // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+    if (error) {
+      console.error("Supabase error:", error.message);
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "認証トークンが無効です。再ログインしてください。",
+        },
+        { status: 401 }
+      );
+    }
+
+    // userIdを使用して習慣をDBから取得
+    const userId = data.user?.id; // ユーザーIDを取得
     const habit = await prisma.habit.findMany({
       where: { userId }, // ユーザーIDでフィルタリング
     });
@@ -42,14 +54,42 @@ export const GET = async (request: NextRequest) => {
 };
 
 export const PUT = async (request: NextRequest) => {
+  const body: UpdateHabitRequestBody = await request.json();
+
   try {
     // リクエストのbodyを取得
-    const { userId, name, supplementaryDescription }: UpdateHabitRequestBody =
-      await request.json();
+    const { habitId, name, supplementaryDescription }: UpdateHabitRequestBody =
+      body;
 
-    // userIdを使用してデータベースを更新
+    // リクエストのbodyをログに出力（デバッグ用）
+    console.log("Parsed Request Body:", {
+      habitId,
+      name,
+      supplementaryDescription,
+    });
+
+    if (!habitId) {
+      return NextResponse.json(
+        { status: "error", message: "habitIdが提供されていません。" },
+        { status: 400 }
+      );
+    }
+
+    // データベースで既に登録されているか確認
+    const existingHabit = await prisma.habit.findUnique({
+      where: { id: habitId },
+    });
+
+    if (!existingHabit) {
+      return NextResponse.json(
+        { status: "error", message: "指定された習慣が存在しません。" },
+        { status: 404 }
+      );
+    }
+
+    // habitIdを使用してデータベースを更新
     const updatedHabit = await prisma.habit.update({
-      where: { userId }, // 一意の識別子を使用する
+      where: { id: habitId }, // 一意の識別子を使用する
       data: {
         name,
         supplementaryDescription,
@@ -60,6 +100,7 @@ export const PUT = async (request: NextRequest) => {
     return NextResponse.json({ status: "OK", updatedHabit }, { status: 200 });
   } catch (error) {
     if (error instanceof Error) {
+      console.error("Error updating habit:", error.message);
       return NextResponse.json({ status: error.message }, { status: 400 });
     }
   }
@@ -67,11 +108,11 @@ export const PUT = async (request: NextRequest) => {
 
 export const DELETE = async (request: NextRequest) => {
   try {
-    const { userId }: DeleteHabitRequestBody = await request.json();
+    const { habitId }: DeleteHabitRequestBody = await request.json();
 
     // userIdを指定して、habitを削除
     await prisma.habit.delete({
-      where: { userId },
+      where: { id: habitId },
     });
 
     // 成功時又はエラー時のレスポンスを返す
