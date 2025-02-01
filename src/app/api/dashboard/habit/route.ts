@@ -32,7 +32,7 @@ export const GET = async (request: NextRequest) => {
       return NextResponse.json(
         {
           status: "error",
-          message: "認証トークンが無効です。再ログインしてください。",
+          message: "認証トークンが無効です。再度ログインしてください。",
         },
         { status: 401 }
       );
