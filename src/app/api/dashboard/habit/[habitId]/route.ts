@@ -2,11 +2,17 @@ import { supabase } from "@/untils/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
+import { DeleteHabitRequestBody } from "@/app/_types/Habit/DeleteRequest";
 
 const prisma = new PrismaClient();
 
-export const GET = async (request: NextRequest) => {
+export const GET = async (
+  request: NextRequest,
+  { params }: { params: { habitId: string } }
+) => {
+  const { habitId } = params;
   const token = request.headers.get("Authorization") ?? "";
+  console.log("Token:", token);
 
   if (!token) {
     return NextResponse.json(
@@ -19,9 +25,14 @@ export const GET = async (request: NextRequest) => {
   }
 
   try {
+    // supabaseに対してtokenを送る
     const { data, error } = await supabase.auth.getUser(token);
+    console.log("Supabase Data:", data);
+    console.log("Supabase Error:", error);
 
+    // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
     if (error) {
+      console.error("Supabase error:", error.message);
       return NextResponse.json(
         {
           status: "error",
@@ -31,34 +42,25 @@ export const GET = async (request: NextRequest) => {
       );
     }
 
-    const userId = data.user?.id;
-    const habit = await prisma.habit.findUnique({
-      where: { userId },
+    // userIdを使用して習慣をDBから取得
+    const userId = data.user?.id; // ユーザーIDを取得
+    const habit = await prisma.habit.findMany({
+      where: { userId, id: habitId }, // userIdとhabitIdでフィルタリング
     });
 
+    // レスポンスを返す
     return NextResponse.json({ status: "OK", habit }, { status: 200 });
   } catch (error) {
-    console.error("Error fetching habit:", error);
     if (error instanceof Error) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: error.message,
-        },
-        { status: 400 }
-      );
+      return NextResponse.json({ status: error.message }, { status: 400 });
     }
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "不明なエラーが発生しました",
-      },
-      { status: 500 }
-    );
   }
 };
 
-export const PUT = async (request: NextRequest) => {
+export const PUT = async (
+  request: NextRequest,
+  { params }: { params: { habitId: string } }
+) => {
   const token = request.headers.get("Authorization") ?? "";
   const body: UpdateHabitRequestBody = await request.json();
 
@@ -73,12 +75,11 @@ export const PUT = async (request: NextRequest) => {
   }
 
   try {
-    // トークン（認証情報）からユーザー情報を取得
+    // supabaseでトークンの取得
     const { data: userData, error: authError } = await supabase.auth.getUser(
       token
     );
 
-    // 認証エラーがある場合の処理
     if (authError) {
       return NextResponse.json(
         {
@@ -89,11 +90,10 @@ export const PUT = async (request: NextRequest) => {
       );
     }
 
-    // リクエストボディから習慣の名前と補足説明を取得
     const { name, supplementaryDescription } = body;
+    const { habitId } = params;
 
-    //この条件が真であれば、習慣の名前が正しく入力されていないと判断。
-    //trim()メソッド:文字列の前後の空白を取り除く
+    // 入力値のバリデーション
     if (!name || name.trim() === "") {
       return NextResponse.json(
         {
@@ -104,11 +104,30 @@ export const PUT = async (request: NextRequest) => {
       );
     }
 
-    const userId = userData.user.id;
+    // データベースで既に習慣が登録されているか確認（ユーザーIDも確認）
+    const existingHabit = await prisma.habit.findFirst({
+      where: {
+        id: habitId,
+        userId: userData.user.id,
+      },
+    });
 
-    // 既存のhabitを更新
+    if (!existingHabit) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "指定された習慣が存在しないか、ログイン情報がありません。",
+        },
+        { status: 404 }
+      );
+    }
+
+    // habitIdとuserIdの両方を使用してデータベースを更新
     const updatedHabit = await prisma.habit.update({
-      where: { userId },
+      where: {
+        id: habitId,
+        userId: userData.user.id,
+      },
       data: {
         name: name.trim(),
         supplementaryDescription: supplementaryDescription?.trim(),
@@ -158,6 +177,7 @@ export const DELETE = async (request: NextRequest) => {
   }
 
   try {
+    // supabaseでトークンの検証
     const { data: userData, error: authError } = await supabase.auth.getUser(
       token
     );
@@ -172,11 +192,32 @@ export const DELETE = async (request: NextRequest) => {
       );
     }
 
-    const userId = userData.user?.id;
+    const { habitId }: DeleteHabitRequestBody = await request.json();
 
-    // ユーザーのhabitを削除
+    // 削除前に存在確認とユーザー所有権チェック
+    const existingHabit = await prisma.habit.findFirst({
+      where: {
+        id: habitId,
+        userId: userData.user?.id,
+      },
+    });
+
+    if (!existingHabit) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "指定された習慣が存在しないか、アクセス権限がありません。",
+        },
+        { status: 404 }
+      );
+    }
+
+    // userIdも指定して、habitを削除
     await prisma.habit.delete({
-      where: { userId },
+      where: {
+        id: habitId,
+        userId: userData.user?.id,
+      },
     });
 
     return NextResponse.json({ status: "OK" }, { status: 200 });

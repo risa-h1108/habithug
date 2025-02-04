@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/untils/supabase";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
 import { Label } from "@/app/_components/Label";
 import { Input } from "@/app/_components/Input";
@@ -16,7 +16,13 @@ export default function Page() {
   useRouteGuard(); // ログイン状態を確認
   const { token } = useSupabaseSession();
   const router = useRouter();
-  const [habitId, setHabitId] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+    reset,
+  } = useForm<UpdateHabitRequestBody>();
 
   useEffect(() => {
     // Supabaseから現在のユーザー情報を取得
@@ -32,99 +38,74 @@ export default function Page() {
     getUserInfo();
   }, [router]);
 
-  async function getHabitIdFromAPI(): Promise<string> {
-    try {
-      // サーバーにリクエストを送り、データを取得
-      const response = await fetch("/api/dashboard/habit");
-
-      // レスポンスが成功でない場合、エラーを投げる
-      if (!response.ok) {
-        throw new Error("Failed to fetch habitId");
-      }
-
-      // レスポンスをJSON形式に変換
-      const data = await response.json();
-
-      // habitIdを返す
-      return data.habitId;
-    } catch (error) {
-      // エラーが発生した場合、コンソールにエラーメッセージを出力
-      console.error("Error fetching habitId:", error);
-
-      // エラー時には空の文字列を返す
-      return "";
-    }
-  }
-
   useEffect(() => {
-    // ここでhabitIdを取得して状態に設定
-    const fetchHabitId = async () => {
-      const fetchedId = await getHabitIdFromAPI();
-      if (fetchedId) {
-        setHabitId(fetchedId); // 取得したhabitIdを状態に設定
-      } else {
-        console.error("Failed to set habitId, fetchedId is empty");
+    if (!token) return;
+    const fetchHabitData = async () => {
+      try {
+        const response = await fetch("/api/dashboard/habit", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch habit data");
+        }
+
+        const data = await response.json();
+        console.log("Habit Data:", data);
+        if (data.habit) {
+          reset(data.habit); // フォームに既存のデータを設定
+        }
+      } catch (error) {
+        console.error("Error fetching habit data:", error);
       }
     };
 
-    fetchHabitId();
-  }, []);
-
-  // useFormを使用してフォームの状態を管理
-  const {
-    register,
-    handleSubmit,
-    formState: { isSubmitting },
-    reset,
-  } = useForm<UpdateHabitRequestBody>();
+    fetchHabitData();
+  }, [token, reset]);
 
   const onSubmit = async (data: UpdateHabitRequestBody) => {
-    console.log("Submitting form with data:", data);
-
     if (!token) {
       alert("ユーザーが認証されていません。");
       return;
     }
 
     try {
-      // dataの後にhabitIdを指定して上書き
-      const requestBody = {
-        ...data,
-        habitId, // ここでhabitIdを上書き
-      };
-
-      console.log("Request Body:", requestBody);
-
       const response = await fetch("/api/dashboard/habit", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: token,
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-
-        if (response.status === 403) {
-          alert(errorData.message);
+        if (response.status === 401) {
+          alert("認証が切れました。再度ログインしてください。");
           router.replace("/login");
         } else {
-          throw new Error(errorData.message);
+          throw new Error(errorData.message || "習慣の更新に失敗しました。");
         }
-      } else {
-        reset();
-        alert("習慣を更新しました。");
+        return;
       }
+
+      alert("習慣を更新しました。");
+      router.refresh();
     } catch (error) {
-      console.error("Error submitting form", error);
-      alert("エラーが発生しました。もう一度お試しください。");
+      console.error("Error updating habit:", error);
+      alert(
+        error instanceof Error ? error.message : "習慣の更新に失敗しました。"
+      );
     }
   };
+
   return (
     <div className="flex justify-center pt-[240px] px-4">
-      <div className="w-full  max-w-lg">
+      <div className="w-full max-w-lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-16">
           <div>
             <Label htmlFor="habitName">
@@ -135,7 +116,8 @@ export default function Page() {
               {...register("name", { required: true })}
               id="habitName"
               required
-              disabled={isSubmitting} //送信中には入力やボタンを無効化する
+              disabled={isSubmitting}
+              placeholder="例：毎日30分運動する"
             />
           </div>
           <div>
@@ -144,7 +126,8 @@ export default function Page() {
               {...register("supplementaryDescription")}
               id="supplementaryDescription"
               className="w-full p-2 border border-gray-300 rounded"
-              disabled={isSubmitting} //送信中には入力やボタンを無効化する
+              disabled={isSubmitting}
+              placeholder="例：ジョギングや筋トレなど"
             />
           </div>
           <Button
