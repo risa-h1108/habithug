@@ -55,6 +55,7 @@ export default function Page() {
 
         const data = await response.json();
         console.log("Habit Data:", data);
+
         if (data.habit) {
           reset(data.habit); // フォームに既存のデータを設定
         }
@@ -104,7 +105,7 @@ export default function Page() {
   };
 
   return (
-    <div className="flex justify-center pt-[240px] px-4">
+    <div className="flex justify-center pt-[120px] px-4 pb-32">
       <div className="w-full max-w-lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-16">
           <div>
@@ -117,7 +118,7 @@ export default function Page() {
               id="habitName"
               required
               disabled={isSubmitting}
-              placeholder="例：毎日30分運動する"
+              placeholder="例：毎日5分運動する"
             />
           </div>
           <div>
@@ -125,27 +126,29 @@ export default function Page() {
             <textarea
               {...register("supplementaryDescription")}
               id="supplementaryDescription"
-              className="w-full p-2 border border-gray-300 rounded"
+              className="w-full p-2 border border-gray-300 rounded h-24"
               disabled={isSubmitting}
-              placeholder="例：ジョギングや筋トレなど"
+              placeholder="例：ジョギング5分間や筋トレYouTube1本など"
             />
           </div>
-          <Button
-            color="blue"
-            size="small"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            更新
-          </Button>
-          <Button
-            color="red"
-            size="small"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            削除
-          </Button>
+          <div className="flex space-x-4">
+            <Button
+              color="blue"
+              size="small"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              更新
+            </Button>
+            <Button
+              color="red"
+              size="small"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              削除
+            </Button>
+          </div>
         </form>
         <Footer />
       </div>

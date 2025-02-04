@@ -75,8 +75,8 @@ export default function Page() {
     }
   };
   return (
-    <div className="flex justify-center pt-[240px] px-4">
-      <div className="w-full  max-w-lg">
+    <div className="flex justify-center pt-[120px] px-4 pb-32">
+      <div className="w-full max-w-lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-16">
           <div>
             <Label htmlFor="habitName">
@@ -87,7 +87,8 @@ export default function Page() {
               {...register("name", { required: true })}
               id="habitName"
               required
-              disabled={isSubmitting} //送信中には入力やボタンを無効化する
+              disabled={isSubmitting}
+              placeholder="例：毎日5分運動する"
             />
           </div>
           <div>
@@ -95,18 +96,21 @@ export default function Page() {
             <textarea
               {...register("supplementaryDescription")}
               id="supplementaryDescription"
-              className="w-full p-2 border border-gray-300 rounded"
-              disabled={isSubmitting} //送信中には入力やボタンを無効化する
+              className="w-full p-2 border border-gray-300 rounded h-24"
+              disabled={isSubmitting}
+              placeholder="例：ジョギング5分間や筋トレYouTube1本など"
             />
           </div>
-          <Button
-            color="blue"
-            size="small"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            決定
-          </Button>
+          <div className="flex space-x-4">
+            <Button
+              color="blue"
+              size="small"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              決定
+            </Button>
+          </div>
         </form>
         <Footer />
       </div>

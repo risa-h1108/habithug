@@ -29,7 +29,7 @@ export const Button: React.FC<ButtonProps> = ({
   const sizeClasses = {
     long: "w-full mt-14 text-sm px-5 py-2.5",
     small:
-      "ml-auto flex justify-center items-center mt-52 text-2xl w-[90px] h-[45px]",
+      "ml-auto flex justify-center items-center mt-12 text-2xl w-[90px] h-[45px]",
   };
 
   return (
