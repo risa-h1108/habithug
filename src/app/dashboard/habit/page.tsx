@@ -108,7 +108,7 @@ export default function Page() {
 
   const onDelete = async () => {
     if (!token || !habitId) {
-      alert("ユーザーが認証されていないか、habitIdが設定されていません。");
+      alert("ユーザーが認証されていないか、習慣が登録されていません。");
       return;
     }
     try {
@@ -132,7 +132,7 @@ export default function Page() {
       }
 
       alert("習慣を削除しました。");
-      router.refresh();
+      router.push("/dashboard/habit");
     } catch (error) {
       console.error("Error updating habit:", error);
       alert(
