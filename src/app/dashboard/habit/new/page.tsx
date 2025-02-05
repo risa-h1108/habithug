@@ -68,6 +68,7 @@ export default function Page() {
       } else {
         reset();
         alert("習慣を登録しました。");
+        router.replace("/dashboard/habit");
       }
     } catch (error) {
       console.error("Error submitting form", error);

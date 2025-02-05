@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/untils/supabase";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
 import { Label } from "@/app/_components/Label";
 import { Input } from "@/app/_components/Input";
@@ -16,6 +16,7 @@ export default function Page() {
   useRouteGuard(); // ログイン状態を確認
   const { token } = useSupabaseSession();
   const router = useRouter();
+  const [habitId, setHabitId] = useState<string | null>(null); // habitIdを管理する状態を追加
 
   const {
     register,
@@ -58,6 +59,7 @@ export default function Page() {
 
         if (data.habit) {
           reset(data.habit); // フォームに既存のデータを設定
+          setHabitId(data.habit.id); // habitIdを設定
         }
       } catch (error) {
         console.error("Error fetching habit data:", error);
@@ -104,6 +106,41 @@ export default function Page() {
     }
   };
 
+  const onDelete = async () => {
+    if (!token || !habitId) {
+      alert("ユーザーが認証されていないか、habitIdが設定されていません。");
+      return;
+    }
+    try {
+      const response = await fetch(`/api/dashboard/habit/${habitId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          alert("認証が切れました。再度ログインしてください。");
+          router.replace("/login");
+        } else {
+          throw new Error(errorData.message || "習慣の削除に失敗しました。");
+        }
+        return;
+      }
+
+      alert("習慣を削除しました。");
+      router.refresh();
+    } catch (error) {
+      console.error("Error updating habit:", error);
+      alert(
+        error instanceof Error ? error.message : "習慣の削除に失敗しました。"
+      );
+    }
+  };
+
   return (
     <div className="flex justify-center pt-[120px] px-4 pb-32">
       <div className="w-full max-w-lg">
@@ -143,7 +180,8 @@ export default function Page() {
             <Button
               color="red"
               size="small"
-              type="submit"
+              type="button" // typeをsubmitからbuttonに変更
+              onClick={onDelete} // 削除処理を呼び出す
               disabled={isSubmitting}
             >
               削除

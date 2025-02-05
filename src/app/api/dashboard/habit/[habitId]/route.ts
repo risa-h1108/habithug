@@ -2,7 +2,6 @@ import { supabase } from "@/untils/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
-import { DeleteHabitRequestBody } from "@/app/_types/Habit/DeleteRequest";
 
 const prisma = new PrismaClient();
 
@@ -163,7 +162,11 @@ export const PUT = async (
   }
 };
 
-export const DELETE = async (request: NextRequest) => {
+export const DELETE = async (
+  request: NextRequest,
+  { params }: { params: { habitId: string } }
+) => {
+  const { habitId } = params;
   const token = request.headers.get("Authorization") ?? "";
 
   if (!token) {
@@ -192,13 +195,11 @@ export const DELETE = async (request: NextRequest) => {
       );
     }
 
-    const { habitId }: DeleteHabitRequestBody = await request.json();
-
-    // 削除前に存在確認とユーザー所有権チェック
-    const existingHabit = await prisma.habit.findFirst({
+    // 削除前に存在確認とユーザーIDをチェック
+    const existingHabit = await prisma.habit.findUnique({
       where: {
         id: habitId,
-        userId: userData.user?.id,
+        userId: userData.user.id,
       },
     });
 
@@ -206,7 +207,7 @@ export const DELETE = async (request: NextRequest) => {
       return NextResponse.json(
         {
           status: "error",
-          message: "指定された習慣が存在しないか、アクセス権限がありません。",
+          message: "指定された習慣が存在しないか、ユーザーが存在しません。",
         },
         { status: 404 }
       );
@@ -216,7 +217,7 @@ export const DELETE = async (request: NextRequest) => {
     await prisma.habit.delete({
       where: {
         id: habitId,
-        userId: userData.user?.id,
+        userId: userData.user.id,
       },
     });
 
