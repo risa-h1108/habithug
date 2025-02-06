@@ -2,7 +2,6 @@ import { supabase } from "@/untils/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
-import { DeleteHabitRequestBody } from "@/app/_types/Habit/DeleteRequest";
 
 const prisma = new PrismaClient();
 
@@ -147,7 +146,6 @@ export const PUT = async (request: NextRequest) => {
 
 export const DELETE = async (request: NextRequest) => {
   const token = request.headers.get("Authorization") ?? "";
-  const body: DeleteHabitRequestBody = await request.json();
 
   if (!token) {
     return NextResponse.json(
@@ -173,12 +171,12 @@ export const DELETE = async (request: NextRequest) => {
         { status: 401 }
       );
     }
-    // リクエストボディからhabitIdを取得
-    const { habitId } = body;
+
+    const userId = userData.user.id;
 
     // ユーザーのhabitを削除
     await prisma.habit.delete({
-      where: { id: habitId, userId: userData.user.id },
+      where: { userId },
     });
 
     return NextResponse.json({ status: "OK" }, { status: 200 });

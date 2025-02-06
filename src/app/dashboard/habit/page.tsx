@@ -1,6 +1,5 @@
 "use client";
 
-import { supabase } from "@/untils/supabase";
 import { useEffect, useState } from "react";
 import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
 import { Label } from "@/app/_components/Label";
@@ -24,20 +23,6 @@ export default function Page() {
     formState: { isSubmitting },
     reset,
   } = useForm<UpdateHabitRequestBody>();
-
-  useEffect(() => {
-    // Supabaseから現在のユーザー情報を取得
-    const getUserInfo = async () => {
-      const { error } = await supabase.auth.getUser();
-
-      if (error) {
-        router.replace("/login");
-        console.error("Error fetching user:", error.message);
-      }
-    };
-
-    getUserInfo();
-  }, [router]);
 
   useEffect(() => {
     if (!token) return;
@@ -69,7 +54,7 @@ export default function Page() {
     fetchHabitData();
   }, [token, reset]);
 
-  const onSubmit = async (data: UpdateHabitRequestBody) => {
+  const updateHabit = async (data: UpdateHabitRequestBody) => {
     if (!token) {
       alert("ユーザーが認証されていません。");
       return;
@@ -106,7 +91,7 @@ export default function Page() {
     }
   };
 
-  const onDelete = async () => {
+  const deleteHabit = async () => {
     if (!token || !habitId) {
       alert("ユーザーが認証されていないか、習慣が登録されていません。");
       return;
@@ -132,7 +117,7 @@ export default function Page() {
       }
 
       alert("習慣を削除しました。");
-      router.push("/dashboard/habit");
+      router.push("/dashboard/habit/new");
     } catch (error) {
       console.error("Error updating habit:", error);
       alert(
@@ -144,7 +129,7 @@ export default function Page() {
   return (
     <div className="flex justify-center pt-[120px] px-4 pb-32">
       <div className="w-full max-w-lg">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-16">
+        <form onSubmit={handleSubmit(updateHabit)} className="space-y-16">
           <div>
             <Label htmlFor="habitName">
               身に付けたい習慣（1日5分でできる内容）
@@ -181,7 +166,7 @@ export default function Page() {
               color="red"
               size="small"
               type="button" // typeをsubmitからbuttonに変更
-              onClick={onDelete} // 削除処理を呼び出す
+              onClick={deleteHabit} // 削除処理を呼び出す
               disabled={isSubmitting}
             >
               削除

@@ -1,7 +1,5 @@
 "use client";
 
-import { supabase } from "@/untils/supabase";
-import { useEffect } from "react";
 import { CreateHabitRequestBody } from "@/app/_types/Habit/PostRequest";
 import { Label } from "@/app/_components/Label";
 import { Input } from "@/app/_components/Input";
@@ -16,20 +14,6 @@ export default function Page() {
   useRouteGuard(); // ログイン状態を確認
   const { token } = useSupabaseSession();
   const router = useRouter();
-
-  useEffect(() => {
-    // Supabaseから現在のユーザー情報を取得
-    const getUserInfo = async () => {
-      const { error } = await supabase.auth.getUser();
-
-      if (error) {
-        router.replace("/login");
-        console.error("Error fetching user:", error.message);
-      }
-    };
-
-    getUserInfo();
-  }, [router]);
 
   // useFormを使用してフォームの状態を管理
   const {

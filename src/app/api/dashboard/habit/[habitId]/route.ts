@@ -43,7 +43,11 @@ export const GET = async (
 
     // userIdを使用して習慣をDBから取得
     const userId = data.user?.id; // ユーザーIDを取得
-    const habit = await prisma.habit.findMany({
+
+    //findUnique(1つのみ取得)：一意の識別子またはIDを指定する必要あり
+    //findFirst(1つのみ取得)：条件に一致する最初のレコードを取得
+    //findMany(複数件取得):条件に一致する全てのレコードを取得
+    const habit = await prisma.habit.findUnique({
       where: { userId, id: habitId }, // userIdとhabitIdでフィルタリング
     });
 
@@ -104,7 +108,7 @@ export const PUT = async (
     }
 
     // データベースで既に習慣が登録されているか確認（ユーザーIDも確認）
-    const existingHabit = await prisma.habit.findFirst({
+    const existingHabit = await prisma.habit.findUnique({
       where: {
         id: habitId,
         userId: userData.user.id,
@@ -130,7 +134,6 @@ export const PUT = async (
       data: {
         name: name.trim(),
         supplementaryDescription: supplementaryDescription?.trim(),
-        updatedAt: new Date(),
       },
     });
 
