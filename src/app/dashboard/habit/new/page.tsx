@@ -7,11 +7,9 @@ import { Button } from "@/app/_components/Button";
 import { Footer } from "@/app/_components/Footer";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useForm } from "react-hook-form";
-import { useRouteGuard } from "../../_hooks/useRouteGuard";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
-  useRouteGuard(); // ログイン状態を確認
   const { token } = useSupabaseSession();
   const router = useRouter();
 
