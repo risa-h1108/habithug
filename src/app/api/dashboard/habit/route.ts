@@ -21,6 +21,7 @@ export const GET = async (request: NextRequest) => {
   try {
     const { data, error } = await supabase.auth.getUser(token);
 
+    // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
     if (error) {
       return NextResponse.json(
         {
@@ -30,8 +31,13 @@ export const GET = async (request: NextRequest) => {
         { status: 401 }
       );
     }
+    // userIdを使用して習慣をDBから取得
 
-    const userId = data.user?.id;
+    const userId = data.user?.id; // ユーザーIDを取得
+
+    //findUnique(1つのみ取得)：一意の識別子またはIDを指定する必要あり
+    //findFirst(1つのみ取得)：条件に一致する最初のレコードを取得
+    //findMany(複数件取得):条件に一致する全てのレコードを取得
     const habit = await prisma.habit.findUnique({
       where: { userId },
     });
@@ -112,7 +118,6 @@ export const PUT = async (request: NextRequest) => {
       data: {
         name: name.trim(),
         supplementaryDescription: supplementaryDescription?.trim(),
-        updatedAt: new Date(),
       },
     });
 
@@ -174,7 +179,7 @@ export const DELETE = async (request: NextRequest) => {
 
     const userId = userData.user.id;
 
-    // ユーザーのhabitを削除
+    // ユーザーIDを用いてhabitを削除
     await prisma.habit.delete({
       where: { userId },
     });

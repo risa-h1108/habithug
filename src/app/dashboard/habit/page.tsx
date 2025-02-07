@@ -97,7 +97,7 @@ export default function Page() {
       return;
     }
     try {
-      const response = await fetch(`/api/dashboard/habit/${habitId}`, {
+      const response = await fetch("/api/dashboard/habit/", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
