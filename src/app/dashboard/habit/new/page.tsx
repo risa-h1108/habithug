@@ -1,7 +1,5 @@
 "use client";
 
-import { supabase } from "@/untils/supabase";
-import { useEffect } from "react";
 import { CreateHabitRequestBody } from "@/app/_types/Habit/PostRequest";
 import { Label } from "@/app/_components/Label";
 import { Input } from "@/app/_components/Input";
@@ -9,27 +7,11 @@ import { Button } from "@/app/_components/Button";
 import { Footer } from "@/app/_components/Footer";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useForm } from "react-hook-form";
-import { useRouteGuard } from "../../_hooks/useRouteGuard";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
-  useRouteGuard(); // ログイン状態を確認
   const { token } = useSupabaseSession();
   const router = useRouter();
-
-  useEffect(() => {
-    // Supabaseから現在のユーザー情報を取得
-    const getUserInfo = async () => {
-      const { error } = await supabase.auth.getUser();
-
-      if (error) {
-        router.replace("/login");
-        console.error("Error fetching user:", error.message);
-      }
-    };
-
-    getUserInfo();
-  }, [router]);
 
   // useFormを使用してフォームの状態を管理
   const {
@@ -68,6 +50,7 @@ export default function Page() {
       } else {
         reset();
         alert("習慣を登録しました。");
+        router.replace("/dashboard/habit");
       }
     } catch (error) {
       console.error("Error submitting form", error);
@@ -75,8 +58,8 @@ export default function Page() {
     }
   };
   return (
-    <div className="flex justify-center pt-[240px] px-4">
-      <div className="w-full  max-w-lg">
+    <div className="flex justify-center pt-[120px] px-4 pb-32">
+      <div className="w-full max-w-lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-16">
           <div>
             <Label htmlFor="habitName">
@@ -87,7 +70,8 @@ export default function Page() {
               {...register("name", { required: true })}
               id="habitName"
               required
-              disabled={isSubmitting} //送信中には入力やボタンを無効化する
+              disabled={isSubmitting}
+              placeholder="例：毎日5分運動する"
             />
           </div>
           <div>
@@ -95,18 +79,21 @@ export default function Page() {
             <textarea
               {...register("supplementaryDescription")}
               id="supplementaryDescription"
-              className="w-full p-2 border border-gray-300 rounded"
-              disabled={isSubmitting} //送信中には入力やボタンを無効化する
+              className="w-full p-2 border border-gray-300 rounded h-24"
+              disabled={isSubmitting}
+              placeholder="例：ジョギング5分間や筋トレYouTube1本など"
             />
           </div>
-          <Button
-            color="blue"
-            size="small"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            決定
-          </Button>
+          <div className="flex space-x-4">
+            <Button
+              color="blue"
+              size="small"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              決定
+            </Button>
+          </div>
         </form>
         <Footer />
       </div>
