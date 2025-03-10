@@ -35,7 +35,26 @@ export const POST = async (request: NextRequest) => {
   }
 
   try {
-    const userId = data.user.id;
+    const supabaseId = data.user.id;
+
+    // SupabaseのIDを使ってUserテーブルからユーザー情報を取得
+    const user = await prisma.user.findUnique({
+      where: {
+        supabaseId: supabaseId,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "ユーザーが見つかりません。",
+        },
+        { status: 404 }
+      );
+    }
+
+    const userId = user.id;
     const body: CreateDiaryRequestBody = await request.json();
     const { date, checkOnly } = body;
 
