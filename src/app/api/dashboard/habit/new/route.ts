@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { CreateHabitRequestBody } from "@/app/_types/Habit/PostRequest";
-import { supabase } from "@/untils/supabase";
+import { supabase } from "@/_untils/supabase";
 
 const prisma = new PrismaClient();
 

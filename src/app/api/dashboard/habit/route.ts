@@ -1,4 +1,4 @@
-import { supabase } from "@/untils/supabase";
+import { supabase } from "@/_untils/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";

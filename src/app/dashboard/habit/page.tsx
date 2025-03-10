@@ -129,13 +129,11 @@ export default function Page() {
       <div className="w-full max-w-lg">
         <form onSubmit={handleSubmit(updateHabit)} className="space-y-16">
           <div>
-            <Label htmlFor="habitName">
-              身に付けたい習慣（1日5分でできる内容）
-            </Label>
+            <Label htmlFor="name">身に付けたい習慣（1日5分でできる内容）</Label>
             <Input
               type="text"
               {...register("name", { required: true })}
-              id="habitName"
+              id="name"
               required
               disabled={isSubmitting}
               placeholder="例：毎日5分運動する"

@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "@/untils/supabase";
+import { supabase } from "@/_untils/supabase";
 import { useRouter } from "next/navigation";
 import { Input } from "../_components/Input";
 import { Label } from "../_components/Label";

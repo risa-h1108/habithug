@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React from "react";
 import { useSupabaseSession } from "../_hooks/useSupabaseSession";
-import { supabase } from "@/untils/supabase";
+import { supabase } from "@/_untils/supabase";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faCalendar } from "@fortawesome/free-regular-svg-icons";
