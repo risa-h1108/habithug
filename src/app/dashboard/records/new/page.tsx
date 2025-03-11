@@ -11,7 +11,9 @@ import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";
 import React, { useState, useEffect } from "react";
-import Script from "next/script";
+import { formatDate } from "@/_untils/formatDate";
+import { ButtonStyle } from "@/app/_components/ButtonStyle";
+import { PlaceholderText } from "@/app/_components/PlaceholderText";
 
 export default function Page() {
   const { token } = useSupabaseSession();
@@ -25,8 +27,8 @@ export default function Page() {
 
       try {
         const today = new Date();
-        const response = await fetch("/api/dashboard/records/new", {
-          method: "POST",
+        const response = await fetch("/api/dashboard/records/check", {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: token,
@@ -74,14 +76,6 @@ export default function Page() {
     name: "praises",
     control,
   });
-
-  // 日付を「YYYY/MM/DD」形式に変換
-  const formatDate = (date: Date) => {
-    return date
-      .toLocaleDateString("ja-JP")
-      .replace(/年|月/g, "/")
-      .replace(/日/g, "");
-  };
 
   // 日付が変更された時の処理
   //event(=イベントオブジェクト):ユーザーがカレンダーUIで日付を選択したときの情報を保持
@@ -166,20 +160,31 @@ export default function Page() {
                 max={new Date().toISOString().split("T")[0]} // 今日の日付を最大値に設定
               />
 
-              {/*X のシェアボタン（ </Script>まで）*/}
-              <a
-                href="https://twitter.com/share?ref_src=twsrc%5Etfw"
-                className="twitter-share-button"
-                data-hashtags="HabitHug"
-                data-show-count="false"
-              >
-                ポストする
-              </a>
-              {/*widgets.js を読み込むためにScriptタグ（重複制御ができるnext/script）を使用 */}
-              <Script
-                async
-                src="https://platform.twitter.com/widgets.js"
-              ></Script>
+              {/*X のシェアボタン*/}
+              <div className="mt-4 mb-8">
+                <a
+                  href={`http://twitter.com/share?url=http://localhost:3001/dashboard/records/new&text=${formatDate(
+                    selectedDate
+                  )}の習慣を振り返りました！&hashtags=HabitHug`}
+                  className="inline-flex items-center px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors duration-200"
+                >
+                  {/*svg:アイコンや図形を描画する
+                     fill:SVGの色を指定,currentColorで<a>内と同じ色になる 
+                     viewBox：SVGの描画領域を指定する、`0 0`が左上の座標で、`24 24`が右下の座標
+                     aria-hidden="true":余計な情報を隠す*/}
+                  <svg
+                    className="w-5 h-5 "
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    {/*<path>タグ*のd属性にSVGの中で実際に形を描くための描画するパス（線や形）の指示を記載*/}
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  投稿する
+                </a>
+              </div>
+              {/*X のシェアボタン終了*/}
 
               {/*下記からbuttonのコード開始 */}
               <div className="flex justify-center space-x-6 transform -translate-x-2">
@@ -204,19 +209,12 @@ export default function Page() {
                     <Label htmlFor={option.id}>
                       <div
                         className={`flex justify-center items-center w-28 h-28 text-center border-2 rounded-full cursor-pointer
-                          ${
-                            selectedReflection === option.id
-                              ? option.color === "blue"
-                                ? "border-blue-400 bg-blue-400"
-                                : option.color === "cyan"
-                                ? "border-cyan-300 bg-cyan-300"
-                                : "border-red-500 bg-red-500"
-                              : option.color === "blue"
-                              ? "border-blue-700 hover:bg-blue-400"
-                              : option.color === "cyan"
-                              ? "border-blue-400 hover:bg-cyan-300"
-                              : "border-red-500 hover:bg-red-400"
-                          } p-4 my-4 text-3xl text-gray-600`}
+                         
+                          ${ButtonStyle(
+                            //コンポーネントから抜粋
+                            option.color, //ボタンの色（'blue', 'cyan', 'red'）
+                            selectedReflection === option.id //ボタンが選択されているかどうかを判断
+                          )} p-4 my-4 text-3xl text-gray-600`}
                       >
                         {/* ユーザーが選択肢を視覚的に認識できるように {option.label}を記述*/}
                         {option.label}
@@ -243,15 +241,7 @@ export default function Page() {
                       id={`praise${index}`}
                       required={index < 3} // 最初の3つは必須
                       disabled={isSubmitting}
-                      placeholder={`例：${
-                        index === 0
-                          ? "5分運動した"
-                          : index === 1
-                          ? "朝ご飯食べた"
-                          : index === 2
-                          ? "脚ストレッチした"
-                          : "今日の褒めを書いてみよう"
-                      }`}
+                      placeholder={`例：${PlaceholderText(index)}`} //PlaceholderTextの関数コンポーネントにindexで各枠分岐
                       className={index >= 3 ? "mt-2" : ""} // 4つ目以降は上部に余白を追加
                     />
                   </div>

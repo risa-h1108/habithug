@@ -6,7 +6,7 @@ import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
 const prisma = new PrismaClient();
 
 export const GET = async (request: NextRequest) => {
-  const token = request.headers.get("Authorization") ?? "";
+  const token = request.headers.get("Authorization");
 
   if (!token) {
     return NextResponse.json(

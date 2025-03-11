@@ -1,5 +1,3 @@
-import React from "react";
-
 enum Reflection {
   Very_Good = "◎",
   Good = "◯",
@@ -24,8 +22,7 @@ const ReflectionMark = ({ reflection }: ReflectionProps) => {
       mark = "➚";
       break;
   }
-
-  return <>The ReflectionMark is {mark}.</>;
+  return { mark };
 };
 
 export default ReflectionMark;
