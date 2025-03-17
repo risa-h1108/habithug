@@ -43,7 +43,7 @@ export default function Page() {
           const data = await response.json();
           if (data.exists) {
             alert("本日の記録は既に登録されています。");
-            router.replace("/dashboard/records/{id}/edit");
+            router.replace("/dashboard/records/{recordId}/edit");
           }
         }
       } catch (error) {
@@ -123,7 +123,7 @@ export default function Page() {
         } else if (response.status === 409) {
           //409は重複エラー
           alert("本日の記録は既に登録されています。");
-          router.replace("/dashboard/records/{id}/edit");
+          router.replace("/dashboard/records/{recordId}/edit");
         } else {
           throw new Error(errorData.message);
         }
