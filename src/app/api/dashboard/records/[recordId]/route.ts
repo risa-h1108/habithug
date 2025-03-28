@@ -54,7 +54,14 @@ export const GET = async (request: NextRequest) => {
 
     const userId = user.id;
     const body: UpdateDiaryRequestBody = await request.json();
-    const { date } = body;
+    const { date, reflection, additionalNotes } = body;
+
+    if (!date || !reflection) {
+      return NextResponse.json(
+        { message: "日付と振り返りのタイプは必須です。" },
+        { status: 400 }
+      );
+    }
 
     //データの取得
     //複数の情報を取得し、その中から条件に合うものを選別するため、findUniqueではなく、findManyを使用。
@@ -63,7 +70,7 @@ export const GET = async (request: NextRequest) => {
         userId,
         date: new Date(date),
         reflection: body.reflection,
-        additionalNotes: body.additionalNotes || "",
+        additionalNotes: additionalNotes || "",
       },
       include: {
         praises: true, // praisesを含めて取得

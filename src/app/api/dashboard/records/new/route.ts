@@ -58,6 +58,32 @@ export const POST = async (request: NextRequest) => {
     const body: CreateDiaryRequestBody = await request.json();
     const { date } = body;
 
+    // 指定された日付の記録が存在するかチェック
+    const existingRecord = await prisma.diary.findFirst({
+      where: {
+        userId,
+        date: {
+          gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
+          lt: new Date(new Date(date).setHours(24, 0, 0, 0)),
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    // 記録が既に存在する場合は409エラー
+    if (existingRecord) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "本日の記録は既に登録されています。",
+          recordId: existingRecord.id,
+        },
+        { status: 409 }
+      );
+    }
+
     // 新規登録処理
     const diary = await prisma.diary.create({
       data: {
