@@ -6,57 +6,29 @@ import { Input } from "@/app/_components/Input";
 import { Label } from "@/app/_components/Label";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useForm, useFieldArray } from "react-hook-form";
-import { CreateDiaryRequestBody } from "@/app/_types/Diary/PostRequest";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";
 import React, { useState, useEffect } from "react";
 import { formatDate } from "@/_untils/formatDate";
 import { ButtonStyle } from "@/app/_components/ButtonStyle";
 import { PlaceholderText } from "@/app/_components/PlaceholderText";
+import { PraiseData } from "@/app/_types/Diary/PraiseData";
+import { DiaryData } from "@/app/_types/Diary/DiaryData";
+import { UpdateDiaryForm } from "@/app/_types/Diary/UpdateDiaryForm";
 
 export default function Page() {
   const { token } = useSupabaseSession();
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState(new Date()); // 現在の日付の状態を管理
-  const [recordId, setRecordId] = useState<string | undefined>(); // recordIdを管理する状態を追加
+  const params = useParams();
+  const recordId = params.recordId as string;
 
-  // ページロード時に既存の記録をチェック
-  useEffect(() => {
-    const checkExistingRecord = async () => {
-      if (!token) return;
-
-      try {
-        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD形式に変換
-        const response = await fetch(
-          `/api/dashboard/records/check?date=${today}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.exists) {
-            setRecordId(data.recordId); // 取得したレコードIDを設定
-            alert("本日の記録は既に登録されています。");
-            router.replace(`/dashboard/records/${data.recordId}/edit`);
-          }
-        }
-      } catch (error) {
-        console.error("Error checking existing record:", error);
-      }
-    };
-    checkExistingRecord();
-  }, [token, router, recordId]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   type reflectionType = "VERY_GOOD" | "GOOD" | "MORE"; //振り返りのタイプを列挙型で型定義
   const [selectedReflection, setSelectedReflection] =
-    useState<reflectionType>(); //選択されたボタンの状態を管理
+    useState<reflectionType | null>(null);
 
   // useFormを使用してフォームの状態を管理
   const {
@@ -64,7 +36,8 @@ export default function Page() {
     handleSubmit: reactHookFormHandleSubmit,
     formState: { isSubmitting },
     control,
-  } = useForm<CreateDiaryRequestBody>({
+    reset,
+  } = useForm<UpdateDiaryForm>({
     defaultValues: {
       praises: [{ praiseText: "" }, { praiseText: "" }, { praiseText: "" }],
     },
@@ -77,41 +50,92 @@ export default function Page() {
     control,
   });
 
-  // 日付が変更された時の処理
-  //event(=イベントオブジェクト):ユーザーがカレンダーUIで日付を選択したときの情報を保持
-  const handleDateChange = (event: {
-    target: { value: string | number | Date };
-  }) => {
-    const newDate = new Date(event.target.value); // 新しい日付を取得
-    setSelectedDate(newDate); // 状態を更新
-  };
+  // 記録を取得
+  useEffect(() => {
+    const fetchDiary = async () => {
+      if (!token || !recordId) return;
+
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/dashboard/records/${recordId}`, {
+          headers: {
+            Authorization: token,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            alert("指定された記録が見つかりません。");
+            router.replace("/dashboard/records/new");
+            return;
+          }
+          throw new Error("記録の取得に失敗しました。");
+        }
+
+        const result = await response.json();
+
+        if (result.status === "success" && result.data) {
+          const diaryData: DiaryData = result.data;
+          setSelectedDate(new Date(diaryData.date));
+          setSelectedReflection(diaryData.reflection);
+
+          // フォームの初期値を設定
+          reset({
+            reflection: diaryData.reflection,
+            additionalNotes: diaryData.additionalNotes || "",
+            praises:
+              diaryData.praises.length > 0
+                ? diaryData.praises.map((p: PraiseData) => ({
+                    praiseText: p.praiseText,
+                  }))
+                : [{ praiseText: "" }, { praiseText: "" }, { praiseText: "" }],
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching diary:", error);
+        alert("記録の取得中にエラーが発生しました。");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDiary();
+  }, [token, recordId, router, reset]);
 
   // フォーム送信の処理
-  const handleSubmit = async (data: CreateDiaryRequestBody) => {
-    // reflectionが未選択の場合はエラーを表示
+  const handleSubmit = async (data: UpdateDiaryForm) => {
     if (!selectedReflection) {
       alert("振り返りのタイプを選択してください。");
       return;
     }
 
-    if (!token) {
-      alert("ユーザーが認証されていません。");
+    if (!token || !recordId) {
+      alert("ユーザーが認証されていないか、記録IDが見つかりません。");
       return;
     }
 
     try {
-      data.reflection = selectedReflection as reflectionType; //「data.reflection」にselectedReflectionのデータが入る。その際にas構文でreflectionTypeの列挙型だと型を明示的に指定
-      data.date = selectedDate; //dataのdata（日付）にselectedDate のデータを入れる。
+      // フォームデータの準備
+      const updateData = {
+        reflection: selectedReflection,
+        additionalNotes: data.additionalNotes || "",
+        //filter:条件に合う要素だけを抽出して新しい配列を作成
+        //trim(): 文字列の前後の空白を削除
+        //[!== ""]: 空文字列でないことをチェック
+        praises: data.praises.filter(
+          (praise) => praise.praiseText.trim() !== ""
+        ),
+      };
 
-      console.log("Submitting form with data:", data);
+      console.log("Updating diary with data:", updateData);
 
-      const response = await fetch("/api/dashboard/records", {
-        method: "POST",
+      const response = await fetch(`/api/dashboard/records/${recordId}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: token,
         },
-        body: JSON.stringify({ ...data, checkOnly: false }), //「checkOnly: false」実際にレコードを作成する処理を実施
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
@@ -120,28 +144,30 @@ export default function Page() {
         if (response.status === 403) {
           alert(errorData.message);
           router.replace("/login");
-        } else if (response.status === 409) {
-          //409は重複エラー
-          alert("本日の記録は既に登録されています。");
-          router.replace(`/dashboard/records/${recordId}/edit`);
         } else {
-          throw new Error(errorData.message);
+          throw new Error(errorData.message || "記録の更新に失敗しました。");
         }
       } else {
-        alert("毎日の記録を登録しました。");
-        router.replace("/dashboard");
+        alert("記録を更新しました。");
+        router.replace(`/dashboard/records/${recordId}/edit`);
       }
     } catch (error) {
-      console.error("Error submitting form", error);
+      console.error("Error updating diary:", error);
       alert("エラーが発生しました。もう一度お試しください。");
     }
   };
 
+  // 削除処理
   const deleteDiary = async () => {
     if (!token || !recordId) {
       alert("ユーザーが認証されていないか、毎日の記録が登録されていません。");
       return;
     }
+
+    if (!confirm("この記録を削除してもよろしいですか？")) {
+      return;
+    }
+
     try {
       const response = await fetch(`/api/dashboard/records/${recordId}`, {
         method: "DELETE",
@@ -153,29 +179,37 @@ export default function Page() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        if (response.status === 401) {
-          alert("認証が切れました。再度ログインしてください。");
+
+        if (response.status === 403) {
+          alert(errorData.message);
           router.replace("/login");
         } else {
-          throw new Error(errorData.message || "習慣の削除に失敗しました。");
+          throw new Error(errorData.message || "記録の削除に失敗しました。");
         }
-        return;
+      } else {
+        alert("記録を削除しました。");
+        router.replace("/dashboard/records/new");
       }
-
-      alert("習慣を削除しました。");
-      router.push("/dashboard/habit/new");
     } catch (error) {
-      console.error("Error updating habit:", error);
-      alert(
-        error instanceof Error ? error.message : "習慣の削除に失敗しました。"
-      );
+      console.error("Error deleting diary:", error);
+      alert("エラーが発生しました。もう一度お試しください。");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>読み込み中...</p>
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="flex justify-center pt-[120px] px-4 pb-32">
         <div className="w-full max-w-lg">
+          <h1 className="text-2xl font-bold mb-6">記録の編集</h1>
+
           <form
             //reactHookFormHandleSubmit：フォームのデータが正しく入力されているかを確認
             // handleSubmit:実際にフォームのデータを処理
@@ -184,18 +218,9 @@ export default function Page() {
           >
             <div>
               <Label htmlFor="Today'sHabit">今日の習慣は...？</Label>
-              <h1>今日の日付：{formatDate(selectedDate)}</h1>
+              <h2 className="mt-2">記録日: {formatDate(selectedDate)}</h2>
 
-              <label htmlFor="date-input">日付を選択:</label>
-              <input
-                id="date-input"
-                type="date"
-                value={selectedDate.toISOString().split("T")[0]} // YYYY/MM/DD形式
-                onChange={handleDateChange} // 日付変更時の処理
-                max={new Date().toISOString().split("T")[0]} // 今日の日付を最大値に設定
-              />
-
-              {/*X のシェアボタン*/}
+              {/* Xのシェアボタン */}
               <div className="mt-4 mb-8">
                 <a
                   href={`http://twitter.com/share?url=http://localhost:3001/dashboard/records/new&text=${formatDate(
@@ -221,7 +246,7 @@ export default function Page() {
               </div>
               {/*X のシェアボタン終了*/}
 
-              {/*下記からbuttonのコード開始 */}
+              {/* 振り返りボタン */}
               <div className="flex justify-center space-x-6 transform -translate-x-2">
                 {/*選択肢の情報を持つオブジェクトの配列でラジオボタンを作成 */}
                 {[
@@ -244,7 +269,6 @@ export default function Page() {
                     <Label htmlFor={option.id}>
                       <div
                         className={`flex justify-center items-center w-28 h-28 text-center border-2 rounded-full cursor-pointer
-                         
                           ${ButtonStyle(
                             //コンポーネントから抜粋
                             option.color, //ボタンの色（'blue', 'cyan', 'red'）
@@ -260,7 +284,8 @@ export default function Page() {
               </div>
               {/*上記まででbuttonのコード終了 */}
 
-              <div className=" pt-8">
+              {/* 褒めるポイント入力欄 */}
+              <div className="pt-8">
                 <Label htmlFor="praises">
                   今日の自分を褒めること（必須：最低3つ）
                 </Label>
@@ -291,6 +316,7 @@ export default function Page() {
                 </button>
               </div>
 
+              {/* 日記入力欄 */}
               <div className="pt-8">
                 <Label htmlFor="additionalNotes">日記（任意）</Label>
                 <textarea
@@ -302,6 +328,8 @@ export default function Page() {
                 />
               </div>
             </div>
+
+            {/* ボタン */}
             <div className="flex space-x-4">
               <Button
                 color="blue"
@@ -322,6 +350,7 @@ export default function Page() {
               </Button>
             </div>
           </form>
+
           <Footer />
         </div>
       </div>

@@ -6,7 +6,7 @@ import { Input } from "@/app/_components/Input";
 import { Label } from "@/app/_components/Label";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useForm, useFieldArray } from "react-hook-form";
-import { CreateDiaryRequestBody } from "@/app/_types/Diary/PostRequest";
+import { CreateDiaryRequestBody } from "@/app/_types/Diary/CreateDiaryRequestBody";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";

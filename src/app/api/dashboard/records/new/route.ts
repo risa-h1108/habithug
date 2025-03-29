@@ -1,4 +1,4 @@
-import { CreateDiaryRequestBody } from "@/app/_types/Diary/PostRequest";
+import { CreateDiaryRequestBody } from "@/app/_types/Diary/CreateDiaryRequestBody";
 import { supabase } from "@/_untils/supabase";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
