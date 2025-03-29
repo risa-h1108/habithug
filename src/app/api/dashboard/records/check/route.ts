@@ -1,4 +1,3 @@
-import { CreateDiaryRequestBody } from "@/app/_types/Diary/PostRequest";
 import { supabase } from "@/_untils/supabase";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -7,7 +6,7 @@ const prisma = new PrismaClient();
 
 export const GET = async (request: NextRequest) => {
   const token = request.headers.get("Authorization");
-  console.log(token);
+  console.log("認証トークン:", token);
 
   if (!token) {
     return NextResponse.json(
@@ -25,6 +24,7 @@ export const GET = async (request: NextRequest) => {
   console.log(error);
 
   if (error) {
+    console.error("認証エラー:", error);
     return NextResponse.json(
       {
         status: "error",
@@ -55,8 +55,24 @@ export const GET = async (request: NextRequest) => {
     }
 
     const userId = user.id;
-    const body: CreateDiaryRequestBody = await request.json();
-    const { date, checkOnly } = body;
+
+    // URLからクエリパラメータを取得
+    const url = new URL(request.url);
+    const dateParam = url.searchParams.get("date");
+    const checkOnly = url.searchParams.get("checkOnly") === "true";
+
+    if (!dateParam) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "日付が指定されていません。",
+        },
+        { status: 400 }
+      );
+    }
+
+    const date = new Date(dateParam);
+    console.log("日付チェック:", date);
 
     // 指定された日付の記録が存在するかチェック
     //同じ日の重複が1件見つかれば十分な為、findFirstにする
@@ -81,11 +97,14 @@ export const GET = async (request: NextRequest) => {
       },
     });
 
-    // checkOnly（true）フラグがある場合は存在チェックのみ
+    console.log("既存レコード:", existingRecord);
+
+    // checkOnlyフラグがある場合は存在チェックのみ
     if (checkOnly) {
       return NextResponse.json({
+        status: "success",
         exists: !!existingRecord, //[!!]: Boolean型に変換,existingRecordをBoolean型に変換
-        recordId: existingRecord?.id, // 存在する場合のみ編集ページへのリダイレクト用にIDを含める
+        recordId: existingRecord?.id || null, // 存在する場合のみ編集ページへのリダイレクト用にIDを含める
       });
     }
 
@@ -93,16 +112,27 @@ export const GET = async (request: NextRequest) => {
     if (existingRecord) {
       return NextResponse.json(
         {
+          status: "error",
           message: "本日の記録は既に登録されています。",
+          exists: true,
           recordId: existingRecord.id, // 編集ページへのリダイレクト用にIDを含める
         },
         { status: 409 }
       );
     }
+
+    // 記録が存在しない場合
+    return NextResponse.json({
+      status: "success",
+      exists: false,
+    });
   } catch (error) {
-    console.error("Error in diary creation:", error);
+    console.error("日記チェックエラー:", error);
     return NextResponse.json(
-      { message: "既存記録の確認中にエラーが発生しました。" },
+      {
+        status: "error",
+        message: "既存記録の確認中にエラーが発生しました。",
+      },
       { status: 500 }
     );
   }
