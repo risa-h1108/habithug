@@ -1,7 +1,9 @@
+import { Reflection } from "@prisma/client";
+
 export type CreateDiaryRequestBody = {
   date: Date;
   checkOnly?: boolean;
-  reflection: "VERY_GOOD" | "GOOD" | "MORE";
+  reflection: Reflection;
   praises: {
     praiseText: string;
   }[];
