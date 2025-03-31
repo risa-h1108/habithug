@@ -63,8 +63,8 @@ export default function Page() {
           },
         });
 
-        if (!response.ok) {
-          if (response.status === 404) {
+        if (!response.ok && response.status === 404) {
+          {
             alert("指定された記録が見つかりません。");
             router.replace("/dashboard/records/new");
             return;
