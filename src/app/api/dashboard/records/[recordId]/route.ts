@@ -1,7 +1,7 @@
-import { UpdateDiaryRequestBody } from "@/app/_types/Diary/UpdateRequest";
-import { supabase } from "@/_untils/supabase";
+import { UpdateDiaryRequestBody } from "@/app/_types/Diary/UpdateDiaryRequestBody";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateUser } from "@/app/_components/Authentication";
 
 const prisma = new PrismaClient();
 
@@ -9,50 +9,20 @@ export const GET = async (
   request: NextRequest,
   { params }: { params: { recordId: string } }
 ) => {
-  const token = request.headers.get("Authorization");
+  // 認証処理
+  //authenticateUser関数にリクエストを渡して認証を実行
+  const authResult = await authenticateUser(request);
 
-  if (!token) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "認証トークンがありません。再ログインしてください。",
-      },
-      { status: 403 }
-    );
+  // NextResponseが返ってきた場合はエラー
+  //(判定したいオブジェクト instanceof オブジェクト名称)：判定したいオブジェクトの種類が instanceof の後ろに記載したオブジェクト名称と一致する場合はtrue、不一致の場合はfalseを返却
+  if (authResult instanceof NextResponse) {
+    return authResult;
   }
 
+  //認証が成功した場合、authResultからユーザー情報を分割代入
+  const { user } = authResult;
+
   try {
-    const { data, error } = await supabase.auth.getUser(token);
-
-    // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
-    if (error) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "認証トークンが無効です。再ログインしてください。",
-        },
-        { status: 403 }
-      );
-    }
-
-    // supabaseIdを使用してdiaryをDBから取得
-    const supabaseId = data.user.id;
-
-    // SupabaseのIDを使ってUserテーブルからユーザー情報を取得
-    const user = await prisma.user.findUnique({
-      where: { supabaseId },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "ユーザーが見つかりません。",
-        },
-        { status: 404 }
-      );
-    }
-
     // URLからレコードIDを取得
     const recordId = params.recordId;
 
@@ -98,52 +68,24 @@ export const PUT = async (
   request: NextRequest,
   { params }: { params: { recordId: string } }
 ) => {
-  const token = request.headers.get("Authorization");
+  // 認証処理
+  const authResult = await authenticateUser(request);
 
-  if (!token) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "認証トークンがありません。再ログインしてください。",
-      },
-      { status: 403 }
-    );
+  // NextResponseが返ってきた場合はエラー
+  if (authResult instanceof NextResponse) {
+    return authResult;
   }
 
+  const { user } = authResult;
+  // ここまで認証処理
+
   try {
-    const { data, error } = await supabase.auth.getUser(token);
-
-    if (error) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "認証トークンが無効です。再ログインしてください。",
-        },
-        { status: 403 }
-      );
-    }
-
-    const supabaseId = data.user.id;
-    const user = await prisma.user.findUnique({
-      where: { supabaseId },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "ユーザーが見つかりません。",
-        },
-        { status: 404 }
-      );
-    }
-
     // URLからレコードIDを取得
     const recordId = params.recordId;
 
     // リクエストボディを取得
     const body: UpdateDiaryRequestBody = await request.json();
-    const { reflection, additionalNotes, praises } = body;
+    const { reflection, additionalNotes } = body;
 
     // 指定されたレコードが存在するか確認
     const existingDiary = await prisma.diary.findUnique({
@@ -163,11 +105,6 @@ export const PUT = async (
       );
     }
 
-    // 既存のpraisesを削除
-    await prisma.praise.deleteMany({
-      where: { diaryId: recordId },
-    });
-
     // 日記を更新
     await prisma.diary.update({
       where: { id: recordId },
@@ -176,18 +113,6 @@ export const PUT = async (
         additionalNotes: additionalNotes,
       },
     });
-
-    // 新しいpraisesを作成
-    if (praises && praises.length > 0) {
-      for (const praise of praises) {
-        await prisma.praise.create({
-          data: {
-            praiseText: praise.praiseText,
-            diaryId: recordId,
-          },
-        });
-      }
-    }
 
     // 更新後のデータを取得して返す
     const updatedDiaryWithPraises = await prisma.diary.findUnique({
@@ -218,46 +143,17 @@ export const DELETE = async (
   request: NextRequest,
   { params }: { params: { recordId: string } }
 ) => {
-  const token = request.headers.get("Authorization");
+  // 認証処理
+  const authResult = await authenticateUser(request);
 
-  if (!token) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "認証トークンがありません。再ログインしてください。",
-      },
-      { status: 403 }
-    );
+  // NextResponseが返ってきた場合はエラー
+  if (authResult instanceof NextResponse) {
+    return authResult;
   }
 
+  const { user } = authResult;
+
   try {
-    const { data, error } = await supabase.auth.getUser(token);
-
-    if (error) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "認証トークンが無効です。再ログインしてください。",
-        },
-        { status: 403 }
-      );
-    }
-
-    const supabaseId = data.user.id;
-    const user = await prisma.user.findUnique({
-      where: { supabaseId },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "ユーザーが見つかりません。",
-        },
-        { status: 404 }
-      );
-    }
-
     // URLからレコードIDを取得
     const recordId = params.recordId;
 
@@ -278,11 +174,6 @@ export const DELETE = async (
         { status: 404 }
       );
     }
-
-    // 関連するpraisesを削除
-    await prisma.praise.deleteMany({
-      where: { diaryId: recordId },
-    });
 
     // 日記を削除
     await prisma.diary.delete({
