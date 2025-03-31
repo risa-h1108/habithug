@@ -2,38 +2,26 @@ import { supabase } from "@/_untils/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
+import { authenticateUser } from "@/app/_components/Authentication";
 
 const prisma = new PrismaClient();
 
 export const GET = async (request: NextRequest) => {
-  const token = request.headers.get("Authorization");
+  // 認証処理
+  //authenticateUser関数にリクエストを渡して認証を実行
+  const authResult = await authenticateUser(request);
 
-  if (!token) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "トークンが提供されていません。",
-      },
-      { status: 401 }
-    );
+  // NextResponseが返ってきた場合はエラー
+  //(判定したいオブジェクト instanceof オブジェクト名称)：判定したいオブジェクトの種類が instanceof の後ろに記載したオブジェクト名称と一致する場合はtrue、不一致の場合はfalseを返却
+  if (authResult instanceof NextResponse) {
+    return authResult;
   }
 
+  //認証が成功した場合、authResultからユーザー情報を分割代入
+  const { user } = authResult;
+
   try {
-    const { data, error } = await supabase.auth.getUser(token);
-
-    // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
-    if (error) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "認証トークンが無効です。再ログインしてください。",
-        },
-        { status: 401 }
-      );
-    }
-    // userIdを使用して習慣をDBから取得
-
-    const userId = data.user?.id; // ユーザーIDを取得
+    const userId = user.id; // ユーザーIDを取得
 
     //findUnique(1つのみ取得)：一意の識別子またはIDを指定する必要あり
     //findFirst(1つのみ取得)：条件に一致する最初のレコードを取得
