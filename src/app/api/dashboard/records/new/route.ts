@@ -1,59 +1,25 @@
 import { CreateDiaryRequestBody } from "@/app/_types/Diary/CreateDiaryRequestBody";
-import { supabase } from "@/_untils/supabase";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateUser } from "@/app/_components/Authentication";
 
 const prisma = new PrismaClient();
 
 export const POST = async (request: NextRequest) => {
-  const token = request.headers.get("Authorization");
-  console.log(token);
+  // 認証処理
+  //authenticateUser関数にリクエストを渡して認証を実行
+  const authResult = await authenticateUser(request);
 
-  if (!token) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "認証トークンがありません。再ログインしてください。",
-      },
-      { status: 403 }
-    );
+  // NextResponseが返ってきた場合はエラー
+  //(判定したいオブジェクト instanceof オブジェクト名称)：判定したいオブジェクトの種類が instanceof の後ろに記載したオブジェクト名称と一致する場合はtrue、不一致の場合はfalseを返却
+  if (authResult instanceof NextResponse) {
+    return authResult;
   }
 
-  // Supabaseに対してtokenを送る
-  const { data, error } = await supabase.auth.getUser(token);
-  console.log(data);
-  console.log(error);
-
-  if (error) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "認証トークンが無効です。再ログインしてください。",
-      },
-      { status: 403 }
-    );
-  }
+  //認証が成功した場合、authResultからユーザー情報を分割代入
+  const { user } = authResult;
 
   try {
-    const supabaseId = data.user.id;
-
-    // SupabaseのIDを使ってUserテーブルからユーザー情報を取得
-    const user = await prisma.user.findUnique({
-      where: {
-        supabaseId: supabaseId,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "ユーザーが見つかりません。",
-        },
-        { status: 404 }
-      );
-    }
-
     const userId = user.id;
     const body: CreateDiaryRequestBody = await request.json();
     const { date } = body;
