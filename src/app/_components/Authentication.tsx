@@ -1,19 +1,28 @@
 import { PrismaClient } from "@prisma/client";
 import { supabase } from "@/_untils/supabase";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 const prisma = new PrismaClient();
+
+// 認証エラー用のカスタムエラークラス
+export class AuthenticationError extends Error {
+  statusCode: number; //エラーの種類を数値で表現、HTTPステータスコードを保持するプロパティ
+
+  constructor(message: string, statusCode: number) {
+    //エラーメッセージとステータスコードを受け取る
+    super(message); //親クラス（Error）のコンストラクタを呼び出し
+    this.name = "AuthenticationError";
+    this.statusCode = statusCode;
+  }
+}
 
 export const authenticateUser = async (request: NextRequest) => {
   const token = request.headers.get("Authorization");
 
   if (!token) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "認証トークンがありません。再ログインしてください。",
-      },
-      { status: 403 }
+    throw new AuthenticationError(
+      "認証トークンがありません。再ログインしてください。",
+      403
     );
   }
 
@@ -21,12 +30,9 @@ export const authenticateUser = async (request: NextRequest) => {
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "認証トークンが無効です。再ログインしてください。",
-        },
-        { status: 403 }
+      throw new AuthenticationError(
+        "認証トークンが無効です。再ログインしてください。",
+        403
       );
     }
 
@@ -36,25 +42,18 @@ export const authenticateUser = async (request: NextRequest) => {
     });
 
     if (!user) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "ユーザーが見つかりません。",
-        },
-        { status: 404 }
-      );
+      throw new AuthenticationError("ユーザーが見つかりません。", 404);
     }
 
     // 認証に成功した場合はユーザー情報を返す
     return { user, isError: false };
   } catch (error) {
+    // 既にAuthenticationErrorの場合はそのまま投げる
+    if (error instanceof AuthenticationError) {
+      throw error;
+    }
+
     console.error("認証エラー:", error);
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "認証処理中にエラーが発生しました。",
-      },
-      { status: 500 }
-    );
+    throw new AuthenticationError("認証処理中にエラーが発生しました。", 500);
   }
 };
