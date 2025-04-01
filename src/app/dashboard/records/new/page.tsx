@@ -6,7 +6,7 @@ import { Input } from "@/app/_components/Input";
 import { Label } from "@/app/_components/Label";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useForm, useFieldArray } from "react-hook-form";
-import { CreateDiaryRequestBody } from "@/app/_types/Diary/PostRequest";
+import { CreateDiaryRequestBody } from "@/app/_types/Diary/CreateDiaryRequestBody";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";
@@ -27,23 +27,32 @@ export default function Page() {
 
       try {
         const today = new Date();
-        const response = await fetch("/api/dashboard/records/check", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          //以下のデータが入る
-          // {date: today（new Date()で作成された日付）,// 日付オブジェクト
-          // checkOnly: true // チェックモードフラグ}
-          body: JSON.stringify({ date: today, checkOnly: true }), //「checkOnly: true 」：レコードの存在確認のみを行う、新規レコードは作成しない
+        const queryParams = new URLSearchParams({
+          date: today.toISOString(),
+          checkOnly: "true",
         });
+
+        console.log(
+          `Checking URL: /api/dashboard/records/check?${queryParams}`
+        );
+
+        const response = await fetch(
+          `/api/dashboard/records/check?${queryParams}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: token,
+            },
+          }
+        );
 
         if (response.ok) {
           const data = await response.json();
           if (data.exists) {
             alert("本日の記録は既に登録されています。");
-            router.replace("/dashboard/records/{id}/edit");
+            if (data.recordId) {
+              router.replace(`/dashboard/records/${data.recordId}/edit`);
+            }
           }
         }
       } catch (error) {
@@ -79,11 +88,49 @@ export default function Page() {
 
   // 日付が変更された時の処理
   //event(=イベントオブジェクト):ユーザーがカレンダーUIで日付を選択したときの情報を保持
-  const handleDateChange = (event: {
+  const handleDateChange = async (event: {
     target: { value: string | number | Date };
   }) => {
     const newDate = new Date(event.target.value); // 新しい日付を取得
-    setSelectedDate(newDate); // 状態を更新
+
+    // 未来の日付は選択できないようにする
+    if (newDate > new Date()) {
+      alert("未来の日付は選択できません。");
+      return;
+    }
+
+    try {
+      const queryParams = new URLSearchParams({
+        date: newDate.toISOString(),
+        checkOnly: "true",
+      });
+
+      const response = await fetch(
+        `/api/dashboard/records/check?${queryParams}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: token || "",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.exists) {
+        alert("この日付の記録は既に登録されています。");
+        if (data.recordId) {
+          router.replace(`/dashboard/records/${data.recordId}/edit`);
+        }
+        return;
+      }
+
+      // 記録が存在しない場合のみ日付を更新
+      setSelectedDate(newDate);
+    } catch (error) {
+      console.error("Error checking date:", error);
+      alert("日付の確認中にエラーが発生しました。");
+    }
   };
 
   // フォーム送信の処理
@@ -105,13 +152,40 @@ export default function Page() {
 
       console.log("Submitting form with data:", data);
 
+      // 重複チェックを先に行う
+      const checkParams = new URLSearchParams({
+        date: selectedDate.toISOString(),
+        checkOnly: "true",
+      });
+
+      const checkResponse = await fetch(
+        `/api/dashboard/records/check?${checkParams}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+
+      const checkData = await checkResponse.json();
+
+      if (checkData.exists) {
+        alert("この日付の記録は既に登録されています。");
+        if (checkData.recordId) {
+          router.replace(`/dashboard/records/${checkData.recordId}/edit`);
+        }
+        return;
+      }
+
+      // 記録が存在しない場合のみ新規作成
       const response = await fetch("/api/dashboard/records/new", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: token,
         },
-        body: JSON.stringify({ ...data, checkOnly: false }), //「checkOnly: false」実際にレコードを作成する処理を実施
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -121,15 +195,19 @@ export default function Page() {
           alert(errorData.message);
           router.replace("/login");
         } else if (response.status === 409) {
-          //409は重複エラー
-          alert("本日の記録は既に登録されています。");
-          router.replace("/dashboard/records/{id}/edit");
+          alert("この日付の記録は既に登録されています。");
+          if (errorData.recordId) {
+            router.replace(`/dashboard/records/${errorData.recordId}/edit`);
+          }
         } else {
           throw new Error(errorData.message);
         }
       } else {
+        const responseData = await response.json();
         alert("毎日の記録を登録しました。");
-        router.replace("/dashboard");
+        if (responseData.recordId) {
+          router.replace(`/dashboard/records/${responseData.recordId}/edit`);
+        }
       }
     } catch (error) {
       console.error("Error submitting form", error);
@@ -151,40 +229,18 @@ export default function Page() {
               <Label htmlFor="Today'sHabit">今日の習慣は...？</Label>
               <h1>今日の日付：{formatDate(selectedDate)}</h1>
 
-              <label htmlFor="date-input">日付を選択:</label>
-              <input
-                id="date-input"
-                type="date"
-                value={selectedDate.toISOString().split("T")[0]} // YYYY/MM/DD形式
-                onChange={handleDateChange} // 日付変更時の処理
-                max={new Date().toISOString().split("T")[0]} // 今日の日付を最大値に設定
-              />
-
-              {/*X のシェアボタン*/}
-              <div className="mt-4 mb-8">
-                <a
-                  href={`http://twitter.com/share?url=http://localhost:3001/dashboard/records/new&text=${formatDate(
-                    selectedDate
-                  )}の習慣を振り返りました！&hashtags=HabitHug`}
-                  className="inline-flex items-center px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors duration-200"
-                >
-                  {/*svg:アイコンや図形を描画する
-                     fill:SVGの色を指定,currentColorで<a>内と同じ色になる 
-                     viewBox：SVGの描画領域を指定する、`0 0`が左上の座標で、`24 24`が右下の座標
-                     aria-hidden="true":余計な情報を隠す*/}
-                  <svg
-                    className="w-5 h-5 "
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    {/*<path>タグ*のd属性にSVGの中で実際に形を描くための描画するパス（線や形）の指示を記載*/}
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                  投稿する
-                </a>
+              <div className="flex items-center">
+                <div className="flex-grow">
+                  <label htmlFor="date-input">日付を選択:</label>
+                  <input
+                    id="date-input"
+                    type="date"
+                    value={selectedDate.toISOString().split("T")[0]} // YYYY/MM/DD形式
+                    onChange={handleDateChange} // 日付変更時の処理
+                    max={new Date().toISOString().split("T")[0]} // 今日の日付を最大値に設定
+                  />
+                </div>
               </div>
-              {/*X のシェアボタン終了*/}
 
               {/*下記からbuttonのコード開始 */}
               <div className="flex justify-center space-x-6 transform -translate-x-2">
