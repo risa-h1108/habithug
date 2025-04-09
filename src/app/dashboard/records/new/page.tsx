@@ -20,6 +20,30 @@ export default function Page() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date()); // 現在の日付の状態を管理
 
+  //URLから日付情報を取得（?date=2025-04-02のように）し、その日付の新規登録ページを表示させる
+  // URLからdateパラメータを取得
+  useEffect(() => {
+    // URLからクエリパラメータを取得
+    // window.location.search: 現在のURLのクエリパラメータを取得
+    const queryParams = new URLSearchParams(window.location.search);
+    //dateという名前のクエリパラメータの値を取得
+    const dateParam = queryParams.get("date");
+
+    // dateパラメータがある場合は日付を設定
+    if (dateParam) {
+      try {
+        const paramDate = new Date(dateParam);
+        // paramDate.getTime(): 日付のミリ秒数を取得
+        // isNaN(): 日付が有効かどうかをチェック, 日付が無効の場合はNaN（「数値ではない」ことを示す特殊な値、数値として期待される場所で無効な数値が発生した場合に使用）を返す
+        if (!isNaN(paramDate.getTime())) {
+          setSelectedDate(paramDate);
+        }
+      } catch (error) {
+        console.error("Invalid date parameter:", error);
+      }
+    }
+  }, []);
+
   // ページロード時に既存の記録をチェック
   useEffect(() => {
     const checkExistingRecord = async () => {
