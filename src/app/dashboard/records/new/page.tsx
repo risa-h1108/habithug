@@ -32,11 +32,18 @@ export default function Page() {
     // dateパラメータがある場合は日付を設定
     if (dateParam) {
       try {
+        // 日付文字列をDateオブジェクトに変換
         const paramDate = new Date(dateParam);
         // paramDate.getTime(): 日付のミリ秒数を取得
         // isNaN(): 日付が有効かどうかをチェック, 日付が無効の場合はNaN（「数値ではない」ことを示す特殊な値、数値として期待される場所で無効な数値が発生した場合に使用）を返す
         if (!isNaN(paramDate.getTime())) {
-          setSelectedDate(paramDate);
+          const year = paramDate.getFullYear();
+          const month = paramDate.getMonth();
+          const day = paramDate.getDate();
+
+          const localDate = new Date(year, month, day);
+
+          setSelectedDate(localDate);
         }
       } catch (error) {
         console.error("Invalid date parameter:", error);
@@ -115,8 +122,10 @@ export default function Page() {
   const handleDateChange = async (event: {
     target: { value: string | number | Date };
   }) => {
-    const newDate = new Date(event.target.value); // 新しい日付を取得
-
+    // 月は0から始まるため調整
+    const dateStr = event.target.value.toString(); //日付の入力フィールドからの値を取得（2024-04-01）
+    const [year, month, day] = dateStr.split("-").map(Number); // 日付文字列を-で分割,map関数で各要素を数値に変換
+    const newDate = new Date(year, month - 1, day);
     // 未来の日付は選択できないようにする
     if (newDate > new Date()) {
       alert("未来の日付は選択できません。");
@@ -125,7 +134,7 @@ export default function Page() {
 
     try {
       const queryParams = new URLSearchParams({
-        date: newDate.toISOString(),
+        date: formatDate(newDate),
         checkOnly: "true",
       });
 
@@ -178,7 +187,7 @@ export default function Page() {
 
       // 重複チェックを先に行う
       const checkParams = new URLSearchParams({
-        date: selectedDate.toISOString(),
+        date: formatDate(selectedDate),
         checkOnly: "true",
       });
 
@@ -251,7 +260,9 @@ export default function Page() {
           >
             <div>
               <Label htmlFor="Today'sHabit">今日の習慣は...？</Label>
-              <h1>今日の日付：{formatDate(selectedDate)}</h1>
+              <h1 className="text-lg font-semibold mb-2">
+                記録する日付：{formatDate(selectedDate)}
+              </h1>
 
               <div className="flex items-center">
                 <div className="flex-grow">
@@ -259,9 +270,10 @@ export default function Page() {
                   <input
                     id="date-input"
                     type="date"
-                    value={selectedDate.toISOString().split("T")[0]} // YYYY/MM/DD形式
-                    onChange={handleDateChange} // 日付変更時の処理
-                    max={new Date().toISOString().split("T")[0]} // 今日の日付を最大値に設定
+                    value={formatDate(selectedDate)}
+                    onChange={handleDateChange}
+                    max={formatDate(new Date())}
+                    className="ml-2 p-1 border rounded"
                   />
                 </div>
               </div>
