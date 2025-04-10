@@ -312,8 +312,8 @@ export default function Page() {
                               /*dayData.diaryが存在しない場合は、「毎日の記録」の新規登録ページを表示 */
                               <Link
                                 href={`/dashboard/records/new?date=${
-                                  //dayData.dateが存在する場合は、クエリでその日付（例えば"2024-4-01" ）を表示
-                                  dayData.date?.toISOString().split("T")[0]
+                                  //dayData.dateが存在する場合は、formatDate関数を使用して一貫した形式を保つ
+                                  dayData.date ? formatDate(dayData.date) : ""
                                 }`}
                                 className="w-9 h-9 rounded-full border-2 border-gray-300"
                               ></Link>
