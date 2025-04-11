@@ -28,36 +28,39 @@ export const GET = async (request: NextRequest) => {
       const startDate = new Date(year, month, 1);
       const endDate = new Date(year, month + 1, 0); // 翌月の0日目 = 当月の最終日
 
-      // ユーザーの記録を取得
-      const diaries = await prisma.diary.findMany({
-        where: {
-          userId: user.id,
-          date: {
-            gte: startDate,
-            lte: endDate,
+      // 並行処理でユーザーの記録と習慣情報を同時に取得
+      const [diaries, habit] = await Promise.all([
+        // ユーザーの記録を取得
+        prisma.diary.findMany({
+          where: {
+            userId: user.id,
+            date: {
+              gte: startDate,
+              lte: endDate,
+            },
           },
-        },
-        select: {
-          id: true,
-          date: true,
-          reflection: true,
-        },
-        orderBy: {
-          date: "asc", // 昇順（古い順）
-        },
-      });
+          select: {
+            id: true,
+            date: true,
+            reflection: true,
+          },
+          orderBy: {
+            date: "asc", // 昇順（古い順）
+          },
+        }),
 
-      // ユーザーの習慣情報を取得
-      const habit = await prisma.habit.findFirst({
-        where: {
-          userId: user.id,
-        },
-        select: {
-          id: true,
-          name: true,
-          supplementaryDescription: true,
-        },
-      });
+        // ユーザーの習慣情報を取得
+        prisma.habit.findFirst({
+          where: {
+            userId: user.id,
+          },
+          select: {
+            id: true,
+            name: true,
+            supplementaryDescription: true,
+          },
+        }),
+      ]);
 
       // カレンダーデータとして整形
       const calendarData = {
