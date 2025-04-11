@@ -7,7 +7,9 @@ import {
 import {
   CalendarData,
   DiaryCalendarItem,
+  CalendarDayItem,
 } from "../../_types/Dashboard/CalendarData";
+import { formatDate } from "@/_untils/formatDate";
 
 const prisma = new PrismaClient();
 
@@ -74,11 +76,16 @@ export const GET = async (request: NextRequest) => {
         reflection: diary.reflection,
       }));
 
+      // カレンダーの日付を生成する処理
+      const displayMonth = month + 1; // 表示用に1を足す（1-12の範囲にする）
+      const calendarDays = generateCalendarDays(year, month, diaryItems);
+
       const calendarData: CalendarData = {
         year,
-        month: month + 1, // 表示用に1を足す
+        month: displayMonth,
         habit,
         diaries: diaryItems,
+        calendarDays,
       };
 
       return NextResponse.json({
@@ -118,3 +125,54 @@ export const GET = async (request: NextRequest) => {
     );
   }
 };
+
+// カレンダーの日付を生成する関数
+function generateCalendarDays(
+  year: number,
+  month: number,
+  diaries: DiaryCalendarItem[]
+): CalendarDayItem[] {
+  const firstDay = new Date(year, month, 1); // 月の最初の日
+  const lastDay = new Date(year, month + 1, 0); //month + 1 によって、次の月を指定, 0:次の月の「0日目」を表す
+
+  const daysInMonth = lastDay.getDate(); //その月の最後の日を示す、カレンダーを表示する際に、何日まであるのかを知るために必要
+  const startingDayOfWeek = firstDay.getDay(); // その月の1日目を示す、0: 日曜日, 1: 月曜日, ...6:土曜日を表す
+
+  // カレンダーの全セルを生成
+  const calendarDays: CalendarDayItem[] = []; //カレンダーの日付を格納する空の配列
+
+  // 前月の日付を追加（カレンダーの最初の週の空白を埋める）
+  for (let i = 0; i < startingDayOfWeek; i++) {
+    calendarDays.push({ day: null, diary: null, isCurrentMonth: false });
+  }
+
+  // 今月の日付を追加
+  for (let day = 1; day <= daysInMonth; day++) {
+    // 日付オブジェクトの作成
+    const date = new Date(year, month, day);
+    const dateString = date.toISOString().split("T")[0]; // YYYY-MM-DD形式
+
+    // 該当する日の日記データを探す
+    const diary =
+      diaries.find((d) => {
+        const diaryDate = new Date(d.date);
+        return formatDate(diaryDate) === dateString;
+      }) || null; // undefined の場合は null を返す
+
+    calendarDays.push({
+      day, // 日付（1-31）
+      diary, // その日の日記データ
+      isCurrentMonth: true, // 今月である
+      date: date.toISOString(), // ISO形式の日付文字列
+    });
+  }
+
+  // カレンダーが常に6週間分になるように翌月の日付を追加（最大42日）
+  const remainingCells = 42 - calendarDays.length;
+  for (let i = 1; i <= remainingCells; i++) {
+    //[day: i]:追加される日付を設定
+    calendarDays.push({ day: i, diary: null, isCurrentMonth: false });
+  }
+
+  return calendarDays;
+}

@@ -4,7 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { Footer } from "@/app/_components/Footer";
 import Link from "next/link";
-import { CalendarData } from "../_types/Dashboard/CalendarData";
+import {
+  CalendarData,
+  CalendarDayItem,
+} from "../_types/Dashboard/CalendarData";
 import { formatDate } from "@/_untils/formatDate";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -79,57 +82,6 @@ export default function Page() {
     fetchCalendarData(currentYear, currentMonth);
   }, [token, currentYear, currentMonth, fetchCalendarData]);
 
-  // カレンダーの日付を生成する関数
-  const generateCalendarDays = () => {
-    if (!calendarData) return [];
-
-    const year = calendarData.year;
-    const month = calendarData.month - 1; // JavaScriptの月は0-11(calendarData.month は1から12の範囲で表されるため、JavaScriptの0から始まる月のインデックスに合わせるために、1を引く)
-
-    const firstDay = new Date(year, month, 1); //1(=day):指定した月の1日目を表す
-    const lastDay = new Date(year, month + 1, 0); //month + 1 によって、次の月を指定, 0:次の月の「0日目」を表す
-
-    const daysInMonth = lastDay.getDate(); //その月の最後の日を示す、カレンダーを表示する際に、何日まであるのかを知るために必要
-    const startingDayOfWeek = firstDay.getDay(); // その月の1日目を示す、0: 日曜日, 1: 月曜日, ...6:土曜日を表す
-
-    // カレンダーの全セルを生成
-    const calendarDays = []; //カレンダーの日付を格納する空の配列
-
-    // 前月の日付を追加(カレンダーの最初の週の空白を埋める)
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      calendarDays.push({ day: null, diary: null, isCurrentMonth: false }); // [isCurrentMonth: false]: 今月ではない日付を格納する
-    }
-
-    // 今月の日付を追加
-    for (let day = 1; day <= daysInMonth; day++) {
-      // 日付オブジェクトの作成
-      const date = new Date(year, month, day);
-      // date.toISOString().split("T")[0]: 日付のISO形式を取得し、"T"を削除して日付部分（MM-DD）のみを取得
-      const dateString = date.toISOString().split("T")[0];
-
-      // 該当する日の日記データを探す
-      const diary = calendarData.diaries.find(
-        (d) => new Date(d.date).toISOString().split("T")[0] === dateString
-      );
-
-      calendarDays.push({
-        day, // 日付（1-31）
-        diary, // その日の日記データ
-        isCurrentMonth: true, // 今月である
-        date, // 日付オブジェクト
-      });
-    }
-
-    // カレンダーが常に6週間分になるように翌月の日付を追加（最大42日）
-    const remainingCells = 42 - calendarDays.length; //calendarDays.length：現在のカレンダーに追加されている日付の数を示す。
-    for (let i = 1; i <= remainingCells; i++) {
-      //[day: i]:追加される日付を設定
-      calendarDays.push({ day: i, diary: null, isCurrentMonth: false });
-    }
-
-    return calendarDays;
-  };
-
   // 振り返りに基づいてアイコンを表示する関数
   const renderReflectionIcon = (reflection: string | null) => {
     if (!reflection) return null;
@@ -173,15 +125,7 @@ export default function Page() {
 
   // セルのスタイルクラスを決定する関数
   const getCellClassNames = (
-    dayData: {
-      isCurrentMonth: boolean; //現在の月であるかどうか
-      date?: Date;
-      diary?: {
-        id: string;
-        reflection: string;
-      } | null;
-      day?: number | null;
-    },
+    dayData: CalendarDayItem,
     index: number //曜日（土曜日や日曜日）を判断するためのインデックス
   ) => {
     const classes = ["relative aspect-square p-1 border"]; //日付のセルのスタイルを設定するためのクラス
@@ -199,7 +143,10 @@ export default function Page() {
       }
 
       // dayData.dateが存在し、かつその日付が今日の日付と一致する場合
-      if (dayData.date && formatDate(dayData.date) === formatDate(new Date())) {
+      if (
+        dayData.date &&
+        formatDate(new Date(dayData.date)) === formatDate(new Date())
+      ) {
         classes.push("bg-purple-100");
       }
     }
@@ -215,7 +162,6 @@ export default function Page() {
     );
   }
 
-  const calendarDays = generateCalendarDays();
   const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
 
   return (
@@ -278,9 +224,9 @@ export default function Page() {
             </div>
 
             <div className="grid grid-cols-7">
-              {/*calendarDays配列が存在する場合は、その配列をmap関数でループし、各日付のセルを表示 */}
-              {calendarDays &&
-                calendarDays.map((dayData, index) => (
+              {/*calendarData.calendarDays配列が存在する場合は、その配列をmap関数でループし、各日付のセルを表示 */}
+              {calendarData?.calendarDays &&
+                calendarData.calendarDays.map((dayData, index) => (
                   <div
                     key={index}
                     //getCellClassNames関数を呼び出し、日付のセルのスタイルクラスを取得
@@ -312,8 +258,10 @@ export default function Page() {
                               /*dayData.diaryが存在しない場合は、「毎日の記録」の新規登録ページを表示 */
                               <Link
                                 href={`/dashboard/records/new?date=${
-                                  //dayData.dateが存在する場合は、formatDate関数を使用して一貫した形式を保つ
-                                  dayData.date ? formatDate(dayData.date) : ""
+                                  //dayData.dateが存在する場合、その値を使用
+                                  dayData.date
+                                    ? formatDate(new Date(dayData.date))
+                                    : ""
                                 }`}
                                 className="w-9 h-9 rounded-full border-2 border-gray-300"
                               ></Link>

@@ -12,9 +12,17 @@ export type HabitData = {
   supplementaryDescription?: string | null;
 };
 
+export type CalendarDayItem = {
+  day: number | null;
+  diary: DiaryCalendarItem | null;
+  isCurrentMonth: boolean;
+  date?: string; // ISO形式の日付文字列（当月の日付の場合のみ含まれる）
+};
+
 export type CalendarData = {
   year: number;
   month: number;
   habit: HabitData | null;
   diaries: DiaryCalendarItem[];
+  calendarDays: CalendarDayItem[]; // カレンダーの日付データを追加
 };
