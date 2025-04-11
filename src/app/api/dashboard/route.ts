@@ -4,6 +4,10 @@ import {
   authenticateUser,
   AuthenticationError,
 } from "@/app/_components/Authentication";
+import {
+  CalendarData,
+  DiaryCalendarItem,
+} from "../../_types/Dashboard/CalendarData";
 
 const prisma = new PrismaClient();
 
@@ -63,11 +67,18 @@ export const GET = async (request: NextRequest) => {
       ]);
 
       // カレンダーデータとして整形
-      const calendarData = {
+      //prisma.diary.findManyでdiariesを取得した後、DiaryCalendarItem型に変換
+      const diaryItems: DiaryCalendarItem[] = diaries.map((diary) => ({
+        id: diary.id,
+        date: diary.date.toISOString(), // Date型をISO形式の文字列に変換
+        reflection: diary.reflection,
+      }));
+
+      const calendarData: CalendarData = {
         year,
         month: month + 1, // 表示用に1を足す
         habit,
-        diaries,
+        diaries: diaryItems,
       };
 
       return NextResponse.json({
