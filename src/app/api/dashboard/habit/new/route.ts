@@ -105,6 +105,7 @@ export const POST = async (request: NextRequest) => {
     }
 
     // その他のエラーの場合は汎用メッセージを返す
+
     console.error("認証エラー:", error);
     return NextResponse.json(
       {
