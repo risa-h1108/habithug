@@ -25,9 +25,10 @@ export const GET = async (request: NextRequest) => {
     const historyData: HistoryData[] = diaries.map((diary) => ({
       id: diary.id,
       date: diary.date.toISOString(), //()を忘れない
-      reflection: diary.reflection,
+      reflection: [diary.reflection], //最低3つ以上の自分を褒める内容を個別に取得する為、[]を追加
       diary: diary,
     }));
+    console.log(historyData);
 
     return NextResponse.json({ historyData });
   } catch (error) {
