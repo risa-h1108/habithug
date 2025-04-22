@@ -16,6 +16,18 @@ export const GET = async (request: NextRequest) => {
       where: {
         userId: user.id,
       },
+      select: {
+        id: true,
+        date: true,
+        reflection: true,
+        additionalNotes: true,
+        praises: {
+          select: {
+            id: true,
+            praiseText: true,
+          },
+        },
+      },
       orderBy: {
         date: "desc",
       },
