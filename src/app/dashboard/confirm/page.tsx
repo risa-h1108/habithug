@@ -28,10 +28,9 @@ export default function Page() {
           throw new Error("履歴データの取得に失敗しました");
         }
 
+        // JSONデータを取得して直接設定
         const result = await response.json();
-        if (result.status === "success") {
-          setHistoryData(result.data);
-        }
+        setHistoryData(result.data);
       } catch (error) {
         console.error("Error fetching history data:", error);
       } finally {
