@@ -1,5 +1,3 @@
-import { Reflection } from "@prisma/client";
-
 // diary内のpraisesのための型
 type Praise = {
   id: string;
@@ -10,7 +8,6 @@ type Praise = {
 type DiaryWithPraises = {
   id: string;
   date: Date;
-  reflection: Reflection;
   additionalNotes: string | null;
   praises: Praise[];
   createdAt: Date;
@@ -21,6 +18,5 @@ type DiaryWithPraises = {
 export type HistoryData = {
   id: string;
   date: string;
-  reflection: string[]; // 配列として格納
   diary: DiaryWithPraises;
 };

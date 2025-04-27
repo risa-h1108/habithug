@@ -23,7 +23,6 @@ export const GET = async (request: NextRequest) => {
         select: {
           id: true,
           date: true,
-          reflection: true,
           additionalNotes: true,
           praises: {
             select: {
@@ -41,12 +40,10 @@ export const GET = async (request: NextRequest) => {
       const historyData: HistoryData[] = diaries.map((diary) => ({
         id: diary.id,
         date: diary.date.toISOString(),
-        reflection: [diary.reflection], // 配列として格納
         diary: {
           id: diary.id,
           date: diary.date,
           additionalNotes: diary.additionalNotes,
-          reflection: diary.reflection,
           praises: diary.praises,
           createdAt: new Date(),
           updatedAt: new Date(),
