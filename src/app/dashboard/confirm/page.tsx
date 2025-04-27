@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { Footer } from "@/app/_components/Footer";
 import { HistoryData } from "@/app/_types/Confirm/HistoryData";
 import Link from "next/link";
 import { formatDisplayDate } from "@/_untils/formatDisplayDate";
@@ -93,8 +92,6 @@ export default function Page() {
           ))}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

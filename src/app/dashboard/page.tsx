@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { Footer } from "@/app/_components/Footer";
 import Link from "next/link";
 import {
   CalendarData,
@@ -276,7 +275,6 @@ export default function Page() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/app/_components/Button";
-import { Footer } from "@/app/_components/Footer";
 import { Input } from "@/app/_components/Input";
 import { Label } from "@/app/_components/Label";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
@@ -369,7 +368,6 @@ export default function Page() {
               </Button>
             </div>
           </form>
-          <Footer />
         </div>
       </div>
     </>
