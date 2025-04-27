@@ -72,7 +72,7 @@ export const GET = async (request: NextRequest) => {
       //prisma.diary.findManyでdiariesを取得した後、DiaryCalendarItem型に変換
       const diaryItems: DiaryCalendarItem[] = diaries.map((diary) => ({
         id: diary.id,
-        date: diary.date.toISOString(), // Date型をISO形式の文字列に変換
+        date: formatDate(diary.date), // Date型をformatDate関数を使用して文字列に変換
         reflection: diary.reflection,
       }));
 
@@ -155,8 +155,7 @@ function generateCalendarDays(
     // 該当する日の日記データを探す
     const diary =
       diaries.find((d) => {
-        const diaryDate = new Date(d.date);
-        return formatDate(diaryDate) === dateString;
+        return d.date.split("T")[0] === dateString;
       }) || null; // undefined の場合は null を返す
 
     calendarDays.push({
