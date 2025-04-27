@@ -1,4 +1,4 @@
-// 日付を一貫した形式「YYYY-MM-DD」に変換
+// 日付を一貫した形式「YYYY/MM/DD」に変換
 export const formatDate = (date: Date) => {
   const year = date.getFullYear(); //4桁の年を取得
   //String関数で月を文字列に変換
@@ -6,5 +6,5 @@ export const formatDate = (date: Date) => {
   //padStart(2, "0")は、2桁になるように0を追加
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return `${year}/${month}/${day}`;
 };
