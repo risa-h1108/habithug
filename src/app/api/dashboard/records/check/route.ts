@@ -35,14 +35,27 @@ export const GET = async (request: NextRequest) => {
           userId: user.id, // 特定ユーザーの記録のみ
           // 日付範囲の指定↓
           date: {
-            // 日付の範囲を設定（0時から24時まで）
             //gte (Greater Than or Equal to)：以上（>=）
             //lt (Less Than)：未満（<）
-            gte: new Date(new Date(date).setHours(0, 0, 0, 0)), // 当日の00:00:00.000
-            lt: new Date(new Date(date).setHours(24, 0, 0, 0)), // 当日の23:59:59.999
-          }, //補足↓
-          //  gt (Greater Than)：より大きい（>）
-          //lte (Less Than or Equal to):以下（<=）
+            gte: (() => {
+              // 日付部分のみを取得して日本時間(JST)での日付オブジェクトを作成
+              const dateObj = new Date(date);
+              const year = dateObj.getFullYear();
+              const month = dateObj.getMonth();
+              const day = dateObj.getDate();
+              // 日本時間での年月日だけの新しい日付を作成（当日の00:00:00）
+              return new Date(year, month, day);
+            })(),
+            lt: (() => {
+              // 日付部分のみを取得して日本時間(JST)での日付オブジェクトを作成
+              const dateObj = new Date(date);
+              const year = dateObj.getFullYear();
+              const month = dateObj.getMonth();
+              const day = dateObj.getDate();
+              // 日本時間での翌日の00:00:00を作成
+              return new Date(year, month, day + 1);
+            })(),
+          },
         },
         // IDも取得して、編集ページへのリダイレクト用に使用
         select: {

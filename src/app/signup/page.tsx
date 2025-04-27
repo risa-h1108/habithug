@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "@/_untils/supabase";
+import { supabase } from "@/_utils/supabase";
 import { CreateUserRequestBody } from "../_types/User/PostRequest";
 import { Input } from "../_components/Input";
 import { Label } from "../_components/Label";

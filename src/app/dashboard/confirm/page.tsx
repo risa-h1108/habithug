@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { HistoryData } from "@/app/_types/Confirm/HistoryData";
 import Link from "next/link";
-import { formatDisplayDate } from "@/_untils/formatDisplayDate";
+import { formatDisplayDate } from "@/_utils/formatDisplayDate";
 
 export default function Page() {
   const { token } = useSupabaseSession();

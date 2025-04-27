@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";
 import React, { useState, useEffect } from "react";
-import { formatDate, formatDateInputHTML } from "@/_untils/formatDate";
+import { formatDate, formatDateInputHTML } from "@/_utils/formatDate";
 import { ButtonStyle } from "@/app/_components/ButtonStyle";
 import { PlaceholderText } from "@/app/_components/PlaceholderText";
 

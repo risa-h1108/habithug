@@ -7,7 +7,7 @@ import {
   CalendarData,
   CalendarDayItem,
 } from "../_types/Dashboard/CalendarData";
-import { formatDate } from "@/_untils/formatDate";
+import { formatDate } from "@/_utils/formatDate";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRight,
