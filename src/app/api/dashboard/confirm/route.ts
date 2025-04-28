@@ -40,14 +40,8 @@ export const GET = async (request: NextRequest) => {
       const historyData: HistoryData[] = diaries.map((diary) => ({
         id: diary.id,
         date: diary.date.toISOString(),
-        diary: {
-          id: diary.id,
-          date: diary.date,
-          additionalNotes: diary.additionalNotes,
-          praises: diary.praises,
-        },
+        diary,
       }));
-      console.log(historyData);
 
       return NextResponse.json({
         status: "success",
