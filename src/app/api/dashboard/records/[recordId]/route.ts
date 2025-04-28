@@ -32,7 +32,12 @@ export const GET = async (
           userId: user.id, // ユーザーのレコードのみアクセス可能
         },
         include: {
-          praises: true, // praisesを含めて取得
+          praises: {
+            select: {
+              id: true,
+              praiseText: true,
+            },
+          },
         },
       });
 
@@ -134,7 +139,12 @@ export const PUT = async (
       const updatedDiaryWithPraises = await prisma.diary.findUnique({
         where: { id: recordId },
         include: {
-          praises: true,
+          praises: {
+            select: {
+              id: true,
+              praiseText: true,
+            },
+          },
         },
       });
 
