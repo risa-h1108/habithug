@@ -10,9 +10,6 @@ type DiaryWithPraises = {
   date: Date;
   additionalNotes: string | null;
   praises: Praise[];
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
 };
 
 export type HistoryData = {

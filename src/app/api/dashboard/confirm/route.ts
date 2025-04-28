@@ -45,9 +45,6 @@ export const GET = async (request: NextRequest) => {
           date: diary.date,
           additionalNotes: diary.additionalNotes,
           praises: diary.praises,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          userId: user.id,
         },
       }));
       console.log(historyData);
