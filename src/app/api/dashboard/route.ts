@@ -9,7 +9,7 @@ import {
   DiaryCalendarItem,
   CalendarDayItem,
 } from "../../_types/Dashboard/CalendarData";
-import { formatDate } from "@/_untils/formatDate";
+import { formatDate } from "@/_utils/formatDate";
 
 const prisma = new PrismaClient();
 
@@ -30,9 +30,13 @@ export const GET = async (request: NextRequest) => {
       const year = yearParam ? parseInt(yearParam) : now.getFullYear(); //parseIntで文字列を数値に変換、getFullYear：年の値を取得する（2000,2001とか）
       const month = monthParam ? parseInt(monthParam) - 1 : now.getMonth(); // JavaScriptの月は0から始まるため調整
 
-      // 指定された月の最初と最後の日付を計算
+      // 指定された月の最初と最後の日付を計算（日本時間で）
       const startDate = new Date(year, month, 1);
       const endDate = new Date(year, month + 1, 0); // 翌月の0日目 = 当月の最終日
+
+      // 日付の時間部分を設定
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
 
       // 並行処理でユーザーの記録と習慣情報を同時に取得
       const [diaries, habit] = await Promise.all([
@@ -72,7 +76,7 @@ export const GET = async (request: NextRequest) => {
       //prisma.diary.findManyでdiariesを取得した後、DiaryCalendarItem型に変換
       const diaryItems: DiaryCalendarItem[] = diaries.map((diary) => ({
         id: diary.id,
-        date: diary.date.toISOString(), // Date型をISO形式の文字列に変換
+        date: formatDate(diary.date), // Date型をformatDate関数を使用して文字列に変換
         reflection: diary.reflection,
       }));
 
@@ -150,14 +154,15 @@ function generateCalendarDays(
   for (let day = 1; day <= daysInMonth; day++) {
     // 日付オブジェクトの作成
     const date = new Date(year, month, day);
-    const dateString = date.toISOString().split("T")[0]; // YYYY-MM-DD形式
+
+    // 当日の日付をYYYY/MM/DD形式に変換
+    const dateString = formatDate(date);
 
     // 該当する日の日記データを探す
     const diary =
       diaries.find((d) => {
-        const diaryDate = new Date(d.date);
-        return formatDate(diaryDate) === dateString;
-      }) || null; // undefined の場合は null を返す
+        return d.date === dateString;
+      }) || null;
 
     calendarDays.push({
       day, // 日付（1-31）

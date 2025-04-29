@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/app/_components/Button";
-import { Footer } from "@/app/_components/Footer";
 import { Input } from "@/app/_components/Input";
 import { Label } from "@/app/_components/Label";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
@@ -10,7 +9,7 @@ import { useRouter, useParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";
 import React, { useState, useEffect } from "react";
-import { formatDate } from "@/_untils/formatDate";
+import { formatDate } from "@/_utils/formatDate";
 import { ButtonStyle } from "@/app/_components/ButtonStyle";
 import { PlaceholderText } from "@/app/_components/PlaceholderText";
 import { PraiseData } from "@/app/_types/Diary/PraiseData";
@@ -369,7 +368,6 @@ export default function Page() {
               </Button>
             </div>
           </form>
-          <Footer />
         </div>
       </div>
     </>

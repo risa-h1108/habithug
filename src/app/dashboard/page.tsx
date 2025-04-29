@@ -2,13 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { Footer } from "@/app/_components/Footer";
 import Link from "next/link";
 import {
   CalendarData,
   CalendarDayItem,
 } from "../_types/Dashboard/CalendarData";
-import { formatDate } from "@/_untils/formatDate";
+import { formatDate } from "@/_utils/formatDate";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRight,
@@ -276,7 +275,6 @@ export default function Page() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

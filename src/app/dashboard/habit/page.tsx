@@ -5,7 +5,6 @@ import { UpdateHabitRequestBody } from "@/app/_types/Habit/UpdateRequestBody";
 import { Label } from "@/app/_components/Label";
 import { Input } from "@/app/_components/Input";
 import { Button } from "@/app/_components/Button";
-import { Footer } from "@/app/_components/Footer";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
@@ -169,7 +168,6 @@ export default function Page() {
             </Button>
           </div>
         </form>
-        <Footer />
       </div>
     </div>
   );

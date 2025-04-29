@@ -27,8 +27,26 @@ export const POST = async (request: NextRequest) => {
         where: {
           userId,
           date: {
-            gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
-            lt: new Date(new Date(date).setHours(24, 0, 0, 0)),
+            gte: (() => {
+              // 日付部分のみを取得して日本時間(JST)での日付オブジェクトを作成
+              const dateObj = new Date(date);
+              const year = dateObj.getFullYear();
+              const month = dateObj.getMonth();
+              const day = dateObj.getDate();
+              // 日本時間での年月日だけの新しい日付を作成
+              const jstDate = new Date(year, month, day);
+              return jstDate;
+            })(),
+            lt: (() => {
+              // 日付部分のみを取得して日本時間(JST)での日付オブジェクトを作成
+              const dateObj = new Date(date);
+              const year = dateObj.getFullYear();
+              const month = dateObj.getMonth();
+              const day = dateObj.getDate();
+              // 日本時間での翌日の00:00:00を作成
+              const jstDate = new Date(year, month, day + 1);
+              return jstDate;
+            })(),
           },
         },
         select: {
@@ -52,7 +70,16 @@ export const POST = async (request: NextRequest) => {
       const diary = await prisma.diary.create({
         data: {
           userId, // ユーザーID
-          date: new Date(date), // 日付
+          date: (() => {
+            // 日付部分のみを取得して日本時間(JST)での日付オブジェクトを作成
+            const dateObj = new Date(date);
+            const year = dateObj.getFullYear();
+            const month = dateObj.getMonth();
+            const day = dateObj.getDate();
+            // 日本時間での年月日だけの新しい日付を作成
+            const jstDate = new Date(year, month, day);
+            return jstDate;
+          })(), // 日付
           reflection: body.reflection!, //[!]:null又はundefinedではないことを保証（＝必須）、reflectionがない場合、実行時エラーが発生
           additionalNotes: body.additionalNotes || "", //任意のため、空文字が渡される可能性を加味。
           praises: {

@@ -20,9 +20,6 @@ export const GET = async (request: NextRequest) => {
     try {
       const userId = user.id; // ユーザーIDを取得
 
-      //findUnique(1つのみ取得)：一意の識別子またはIDを指定する必要あり
-      //findFirst(1つのみ取得)：条件に一致する最初のレコードを取得
-      //findMany(複数件取得):条件に一致する全てのレコードを取得
       const habit = await prisma.habit.findUnique({
         where: { userId },
       });

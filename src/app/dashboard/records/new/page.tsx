@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/app/_components/Button";
-import { Footer } from "@/app/_components/Footer";
 import { Input } from "@/app/_components/Input";
 import { Label } from "@/app/_components/Label";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
@@ -11,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";
 import React, { useState, useEffect } from "react";
-import { formatDate } from "@/_untils/formatDate";
+import { formatDate, formatDateInputHTML } from "@/_utils/formatDate";
 import { ButtonStyle } from "@/app/_components/ButtonStyle";
 import { PlaceholderText } from "@/app/_components/PlaceholderText";
 
@@ -270,9 +269,9 @@ export default function Page() {
                   <input
                     id="date-input"
                     type="date"
-                    value={formatDate(selectedDate)}
+                    value={formatDateInputHTML(selectedDate)}
                     onChange={handleDateChange}
-                    max={formatDate(new Date())}
+                    max={formatDateInputHTML(new Date())}
                     className="ml-2 p-1 border rounded"
                   />
                 </div>
@@ -370,8 +369,6 @@ export default function Page() {
               </Button>
             </div>
           </form>
-
-          <Footer />
         </div>
       </div>
     </>
