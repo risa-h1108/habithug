@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "./_components/Header";
-import { Footer } from "./_components/Footer";
 import React from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -28,8 +27,16 @@ export default function RootLayout({
       <body className={inter.className}>
         <Header />
         {children}
-        <ToastContainer />
-        <Footer />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false} // プログレスバーを表示（falseで表示）
+          newestOnTop={false} // 新しい通知が上に表示される
+          closeOnClick // クリックで閉じる
+          rtl={false} // 右から左への表示（falseで左から右へ）
+          pauseOnFocusLoss // ウィンドウのフォーカスが外れたときに自動閉じを一時停止しない
+          pauseOnHover // マウスホバー時に自動閉じのタイマーを一時停止する
+        />
       </body>
     </html>
   );
