@@ -6,6 +6,7 @@ import { Input } from "../_components/Input";
 import { Label } from "../_components/Label";
 import { Button } from "../_components/Button";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { toast } from "react-toastify";
 
 // フォームの入力フィールドの型を定義
 type FormValues = {
@@ -46,9 +47,11 @@ export default function Page() {
         method: "POST",
         body: JSON.stringify(body),
       });
-      alert("確認メールを送信しました。");
+      toast.success("確認メールを送信しました。");
     } catch (error) {
-      alert(error);
+      toast.error(
+        error instanceof Error ? error.message : "エラーが発生しました。"
+      );
     }
   };
 

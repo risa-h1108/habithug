@@ -7,6 +7,7 @@ import { Button } from "@/app/_components/Button";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function Page() {
   const { token } = useSupabaseSession();
@@ -24,7 +25,7 @@ export default function Page() {
     console.log("Submitting form with data:", data);
 
     if (!token) {
-      alert("ユーザーが認証されていません。");
+      toast.error("ユーザーが認証されていません。");
       return;
     }
 
@@ -41,19 +42,19 @@ export default function Page() {
         const errorData = await response.json();
 
         if (response.status === 403) {
-          alert(errorData.message);
+          toast.error(errorData.message);
           router.replace("/login");
         } else {
           throw new Error(errorData.message);
         }
       } else {
         reset();
-        alert("習慣を登録しました。");
+        toast.success("習慣を登録しました。");
         router.replace("/dashboard/habit");
       }
     } catch (error) {
       console.error("Error submitting form", error);
-      alert("エラーが発生しました。もう一度お試しください。");
+      toast.error("エラーが発生しました。もう一度お試しください。");
     }
   };
   return (

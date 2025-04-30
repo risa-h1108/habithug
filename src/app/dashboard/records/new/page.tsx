@@ -13,6 +13,7 @@ import React, { useState, useEffect } from "react";
 import { formatDate, formatDateInputHTML } from "@/_utils/formatDate";
 import { ButtonStyle } from "@/app/_components/ButtonStyle";
 import { PlaceholderText } from "@/app/_components/PlaceholderText";
+import { toast } from "react-toastify";
 
 export default function Page() {
   const { token } = useSupabaseSession();
@@ -79,7 +80,7 @@ export default function Page() {
         if (response.ok) {
           const data = await response.json();
           if (data.exists) {
-            alert("本日の記録は既に登録されています。");
+            toast.error("本日の記録は既に登録されています。");
             if (data.recordId) {
               router.replace(`/dashboard/records/${data.recordId}/edit`);
             }
@@ -127,7 +128,7 @@ export default function Page() {
     const newDate = new Date(year, month - 1, day);
     // 未来の日付は選択できないようにする
     if (newDate > new Date()) {
-      alert("未来の日付は選択できません。");
+      toast.error("未来の日付は選択できません。");
       return;
     }
 
@@ -150,7 +151,7 @@ export default function Page() {
       const data = await response.json();
 
       if (data.exists) {
-        alert("この日付の記録は既に登録されています。");
+        toast.error("この日付の記録は既に登録されています。");
         if (data.recordId) {
           router.replace(`/dashboard/records/${data.recordId}/edit`);
         }
@@ -161,7 +162,7 @@ export default function Page() {
       setSelectedDate(newDate);
     } catch (error) {
       console.error("Error checking date:", error);
-      alert("日付の確認中にエラーが発生しました。");
+      toast.error("日付の確認中にエラーが発生しました。");
     }
   };
 
@@ -169,12 +170,12 @@ export default function Page() {
   const handleSubmit = async (data: CreateDiaryRequestBody) => {
     // reflectionが未選択の場合はエラーを表示
     if (!selectedReflection) {
-      alert("振り返りのタイプを選択してください。");
+      toast.error("振り返りのタイプを選択してください。");
       return;
     }
 
     if (!token) {
-      alert("ユーザーが認証されていません。");
+      toast.error("ユーザーが認証されていません。");
       return;
     }
 
@@ -203,7 +204,7 @@ export default function Page() {
       const checkData = await checkResponse.json();
 
       if (checkData.exists) {
-        alert("この日付の記録は既に登録されています。");
+        toast.error("この日付の記録は既に登録されています。");
         if (checkData.recordId) {
           router.replace(`/dashboard/records/${checkData.recordId}/edit`);
         }
@@ -224,10 +225,10 @@ export default function Page() {
         const errorData = await response.json();
 
         if (response.status === 403) {
-          alert(errorData.message);
+          toast.error(errorData.message);
           router.replace("/login");
         } else if (response.status === 409) {
-          alert("この日付の記録は既に登録されています。");
+          toast.error("この日付の記録は既に登録されています。");
           if (errorData.recordId) {
             router.replace(`/dashboard/records/${errorData.recordId}/edit`);
           }
@@ -236,14 +237,14 @@ export default function Page() {
         }
       } else {
         const responseData = await response.json();
-        alert("毎日の記録を登録しました。");
+        toast.success("毎日の記録を登録しました。");
         if (responseData.recordId) {
           router.replace(`/dashboard/records/${responseData.recordId}/edit`);
         }
       }
     } catch (error) {
       console.error("Error submitting form", error);
-      alert("エラーが発生しました。もう一度お試しください。");
+      toast.error("エラーが発生しました。もう一度お試しください。");
     }
   };
 
