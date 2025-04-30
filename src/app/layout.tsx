@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "./_components/Header";
 import { Footer } from "./_components/Footer";
+import React from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 //Interフォントを設定し、ラテン文字のサブセットを使用するようにしています。
 const inter = Inter({ subsets: ["latin"] });
@@ -25,6 +28,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Header />
         {children}
+        <ToastContainer />
         <Footer />
       </body>
     </html>
