@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouteGuard } from "@/app/dashboard/_hooks/useRouteGuard";
+import { Footer } from "@/app/_components/Footer";
 
 export default function AdminLayout({
   children,
@@ -9,5 +10,10 @@ export default function AdminLayout({
 }) {
   useRouteGuard();
 
-  return <div>{children}</div>;
+  return (
+    <div>
+      {children}
+      <Footer />
+    </div>
+  );
 }

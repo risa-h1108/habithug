@@ -6,6 +6,7 @@ import { Input } from "../_components/Input";
 import { Label } from "../_components/Label";
 import { Button } from "../_components/Button";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { toast } from "react-toastify";
 
 // フォームの入力フィールドの型を定義
 type FormValues = {
@@ -32,7 +33,7 @@ export default function Page() {
     });
 
     if (error) {
-      alert("ログインに失敗しました");
+      toast.error("ログインに失敗しました");
     } else {
       router.replace("/dashboard");
     }

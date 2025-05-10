@@ -170,7 +170,7 @@ export default function Page() {
         <div className="max-w-screen-md mx-auto mt-4">
           {/*overflow-hidden: 内容がこのコンテナの範囲を超えた場合に隠す設定 */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between p-4 bg-green-400 text-white">
+            <div className="flex items-center justify-between p-4 bg-green-300 text-white">
               <h2 className="text-xl font-semibold">習慣化カレンダー</h2>
               {/*calendarData?.habitが存在する場合は /dashboard/habit に遷移し、存在しない場合は /dashboard/habit/new に遷移 */}
               <Link

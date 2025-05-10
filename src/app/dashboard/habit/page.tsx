@@ -8,6 +8,7 @@ import { Button } from "@/app/_components/Button";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function Page() {
   const { token } = useSupabaseSession();
@@ -53,7 +54,7 @@ export default function Page() {
 
   const updateHabit = async (data: UpdateHabitRequestBody) => {
     if (!token) {
-      alert("ユーザーが認証されていません。");
+      toast.error("ユーザーが認証されていません。");
       return;
     }
 
@@ -70,7 +71,7 @@ export default function Page() {
       if (!response.ok) {
         const errorData = await response.json();
         if (response.status === 401) {
-          alert("認証が切れました。再度ログインしてください。");
+          toast.error("認証が切れました。再度ログインしてください。");
           router.replace("/login");
         } else {
           throw new Error(errorData.message || "習慣の更新に失敗しました。");
@@ -78,11 +79,11 @@ export default function Page() {
         return;
       }
 
-      alert("習慣を更新しました。");
+      toast.success("習慣を更新しました。");
       router.refresh();
     } catch (error) {
       console.error("Error updating habit:", error);
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "習慣の更新に失敗しました。"
       );
     }
@@ -90,7 +91,7 @@ export default function Page() {
 
   const deleteHabit = async () => {
     if (!token || !habitId) {
-      alert("ユーザーが認証されていないか、習慣が登録されていません。");
+      toast.error("ユーザーが認証されていないか、習慣が登録されていません。");
       return;
     }
     try {
@@ -105,7 +106,7 @@ export default function Page() {
       if (!response.ok) {
         const errorData = await response.json();
         if (response.status === 401) {
-          alert("認証が切れました。再度ログインしてください。");
+          toast.error("認証が切れました。再度ログインしてください。");
           router.replace("/login");
         } else {
           throw new Error(errorData.message || "習慣の削除に失敗しました。");
@@ -113,11 +114,11 @@ export default function Page() {
         return;
       }
 
-      alert("習慣を削除しました。");
+      toast.success("習慣を削除しました。");
       router.push("/dashboard/habit/new");
     } catch (error) {
       console.error("Error updating habit:", error);
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "習慣の削除に失敗しました。"
       );
     }

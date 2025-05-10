@@ -17,6 +17,7 @@ import { DiaryData } from "@/app/_types/Diary/DiaryData";
 import { UpdateDiaryForm } from "@/app/_types/Diary/UpdateDiaryForm";
 import Image from "next/image";
 import thredsLogo from "@/app/public/threads-logo-black-01.png";
+import { toast } from "react-toastify";
 
 export default function Page() {
   const { token } = useSupabaseSession();
@@ -66,7 +67,7 @@ export default function Page() {
 
         if (!response.ok && response.status === 404) {
           {
-            alert("指定された記録が見つかりません。");
+            toast.error("指定された記録が見つかりません。");
             router.replace("/dashboard/records/new");
             return;
           }
@@ -94,7 +95,7 @@ export default function Page() {
         }
       } catch (error) {
         console.error("Error fetching diary:", error);
-        alert("記録の取得中にエラーが発生しました。");
+        toast.error("記録の取得中にエラーが発生しました。");
       } finally {
         setLoading(false);
       }
@@ -106,12 +107,12 @@ export default function Page() {
   // フォーム送信の処理
   const handleSubmit = async (data: UpdateDiaryForm) => {
     if (!selectedReflection) {
-      alert("振り返りのタイプを選択してください。");
+      toast.error("振り返りのタイプを選択してください。");
       return;
     }
 
     if (!token || !recordId) {
-      alert("ユーザーが認証されていないか、記録IDが見つかりません。");
+      toast.error("ユーザーが認証されていないか、記録IDが見つかりません。");
       return;
     }
 
@@ -143,25 +144,27 @@ export default function Page() {
         const errorData = await response.json();
 
         if (response.status === 403) {
-          alert(errorData.message);
+          toast.error(errorData.message);
           router.replace("/login");
         } else {
           throw new Error(errorData.message || "記録の更新に失敗しました。");
         }
       } else {
-        alert("記録を更新しました。");
+        toast.success("記録を更新しました。");
         router.replace(`/dashboard/records/${recordId}/edit`);
       }
     } catch (error) {
       console.error("Error updating diary:", error);
-      alert("エラーが発生しました。もう一度お試しください。");
+      toast.error("エラーが発生しました。もう一度お試しください。");
     }
   };
 
   // 削除処理
   const deleteDiary = async () => {
     if (!token || !recordId) {
-      alert("ユーザーが認証されていないか、毎日の記録が登録されていません。");
+      toast.error(
+        "ユーザーが認証されていないか、毎日の記録が登録されていません。"
+      );
       return;
     }
 
@@ -182,18 +185,18 @@ export default function Page() {
         const errorData = await response.json();
 
         if (response.status === 403) {
-          alert(errorData.message);
+          toast.error(errorData.message);
           router.replace("/login");
         } else {
           throw new Error(errorData.message || "記録の削除に失敗しました。");
         }
       } else {
-        alert("記録を削除しました。");
+        toast.success("記録を削除しました。");
         router.replace("/dashboard/records/new");
       }
     } catch (error) {
       console.error("Error deleting diary:", error);
-      alert("エラーが発生しました。もう一度お試しください。");
+      toast.error("エラーが発生しました。もう一度お試しください。");
     }
   };
 
